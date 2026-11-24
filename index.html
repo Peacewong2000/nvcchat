@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭理財非暴力溝通 (NVC) 互動練習室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8f7f4;
+        }
+        /* 自訂捲軸樣式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- 頂部導航欄 -->
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg text-slate-800 leading-tight">理財心溝通 · 互動練習室</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">運用「非暴力溝通 (NVC)」化解家庭財務危機</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div id="header-actions" class="hidden flex items-center space-x-2">
+                    <button onclick="triggerEndConversation()" class="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 font-medium transition">
+                        結束對話並分析
+                    </button>
+                    <button onclick="resetApp()" class="text-xs sm:text-sm px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition">
+                        重新開始
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主內容區 -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col">
+
+        <!-- 1. 情境介紹與開始畫面 -->
+        <section id="intro-screen" class="my-auto fade-in">
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-teal-700 to-emerald-600 p-6 sm:p-8 text-white">
+                    <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-medium mb-3 backdrop-blur-sm">
+                        試用情境 01 · 投資騙局危機
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-2">消失的五十萬退休積蓄</h2>
+                    <p class="text-teal-50 text-sm sm:text-base leading-relaxed">
+                        你將扮演<strong>「丈夫」</strong>的角色。剛放工回到家，你發現妻子神色慌張、吞吞吐吐，似乎有重大事情隱瞞著你……
+                    </p>
+                </div>
+
+                <div class="p-6 sm:p-8 space-y-6">
+                    <!-- 角色與背景設定 -->
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-xl bg-stone-50 border border-stone-200/80">
+                            <h3 class="font-bold text-slate-800 mb-1.5 flex items-center text-sm">
+                                <span class="w-2 h-2 rounded-full bg-teal-600 mr-2"></span>你的角色與處境
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                                你平日工作辛苦、節儉儲錢，希望與妻子安享晚年。面對突如其來的財務打擊，你感到震驚、肉痛與失去安全感是人之常情。
+                            </p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-stone-50 border border-stone-200/80">
+                            <h3 class="font-bold text-slate-800 mb-1.5 flex items-center text-sm">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>練習目標
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                                嘗試避免指責、羞辱與情緒發洩。透過接納情緒、理解妻子背後的善意動機，並坦誠表達自己的感受與需要，最終達成<strong>共同面對（如報警）及建立未來理財共識</strong>。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 非暴力溝通四要素小提示 -->
+                    <div class="bg-teal-50/70 border border-teal-100 rounded-xl p-4 sm:p-5">
+                        <h4 class="font-bold text-teal-900 text-sm mb-3">💡 非暴力溝通 (NVC) 四大心法提示：</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div class="bg-white p-3 rounded-lg shadow-xs border border-teal-100/50">
+                                <div class="font-bold text-teal-700 mb-1">1. 觀察 (Observation)</div>
+                                <p class="text-slate-600">客觀陳述事實，不帶批判（如：「我見你吞吞吐吐」而非「你鬼食泥咁」）。</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg shadow-xs border border-teal-100/50">
+                                <div class="font-bold text-teal-700 mb-1">2. 感受 (Feeling)</div>
+                                <p class="text-slate-600">表達內心真實情緒（震驚、肉痛、徬徨、失去安全感），而非發脾氣指責。</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg shadow-xs border border-teal-100/50">
+                                <div class="font-bold text-teal-700 mb-1">3. 需要 (Need)</div>
+                                <p class="text-slate-600">連結背後的渴望（重視退休保障、渴望彼此信任與事前商量），並同理對方想幫輕你的心意。</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg shadow-xs border border-teal-100/50">
+                                <div class="font-bold text-teal-700 mb-1">4. 請求 (Request)</div>
+                                <p class="text-slate-600">提出具體、正向的行動方案（如：「我哋一齊去報警」、「以後過一萬蚊先商量」）。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex justify-center">
+                        <button onclick="startSimulation()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md hover:shadow-lg transition transform active:scale-98 flex items-center justify-center space-x-2">
+                            <span>開始與妻子對話</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 互動對話畫面 -->
+        <section id="chat-screen" class="hidden flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden fade-in" style="height: calc(100vh - 100px);">
+            <!-- 狀態列：顯示妻子情緒與對話進度 -->
+            <div class="bg-stone-50 px-4 py-2.5 border-b border-stone-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center space-x-2">
+                    <span class="font-medium text-slate-500">妻子狀態：</span>
+                    <span id="wife-mood-badge" class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium">
+                        緊張、吞吞吐吐
+                    </span>
+                </div>
+                <div class="text-slate-500">
+                    對話回合：<span id="turn-counter" class="font-bold text-slate-700">1</span> / 12
+                </div>
+            </div>
+
+            <!-- 訊息捲動區 -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-[#faf9f6]">
+                <!-- 訊息會動態插入此處 -->
+            </div>
+
+            <!-- 肢體/情緒調節輔助按鈕 -->
+            <div class="bg-stone-50 px-4 py-2 border-t border-stone-200/80 flex items-center space-x-2 overflow-x-auto">
+                <span class="text-xs text-slate-400 shrink-0">加入動作/神態：</span>
+                <button type="button" onclick="insertAction('（深呼吸一下，語氣平靜）')" class="shrink-0 text-xs px-2.5 py-1 rounded-md bg-white border border-stone-200 text-slate-600 hover:border-teal-400 hover:text-teal-700 transition">
+                    😮‍💨 深呼吸調整情緒
+                </button>
+                <button type="button" onclick="insertAction('（輕拍妻子手背，眼神溫和）')" class="shrink-0 text-xs px-2.5 py-1 rounded-md bg-white border border-stone-200 text-slate-600 hover:border-teal-400 hover:text-teal-700 transition">
+                    🤝 輕拍手背安撫
+                </button>
+                <button type="button" onclick="insertAction('（沉默一陣，點點頭表示理解）')" class="shrink-0 text-xs px-2.5 py-1 rounded-md bg-white border border-stone-200 text-slate-600 hover:border-teal-400 hover:text-teal-700 transition">
+                    😌 沉默傾聽點頭
+                </button>
+            </div>
+
+            <!-- 輸入框區域 -->
+            <form id="chat-form" onsubmit="handleUserSubmit(event)" class="p-3 sm:p-4 bg-white border-t border-stone-200 flex items-end space-x-2 sm:space-x-3">
+                <div class="flex-1 relative">
+                    <textarea id="user-input" rows="2" placeholder="輸入你想對妻子講嘅說話（可用廣東話口語，例如：見你吞吞吐吐咁，坐低慢慢講...）" class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 resize-none" onkeydown="handleKeyDown(event)"></textarea>
+                </div>
+                <button type="submit" id="send-btn" class="px-4 sm:px-5 py-2.5 h-[62px] rounded-xl bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 text-white font-medium text-sm transition flex items-center justify-center shrink-0 shadow-xs">
+                    <span>發送</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- 3. 分析報告載入畫面 -->
+        <section id="analyzing-screen" class="hidden my-auto text-center py-16 fade-in">
+            <div class="inline-block w-14 h-14 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mb-4"></div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">正在為你分析剛才的溝通過程...</h3>
+            <p class="text-sm text-slate-500 max-w-md mx-auto">
+                AI 導師正根據「非暴力溝通 (NVC)」四要素（觀察、感受、需要、請求）及劇本準則，檢視你的每一句對話與情緒處理。
+            </p>
+        </section>
+
+        <!-- 4. 非暴力溝通分析報告新版面 -->
+        <section id="report-screen" class="hidden space-y-6 pb-10 fade-in">
+            <!-- 總結評分卡片 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-slate-800 to-slate-700 p-6 sm:p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-teal-500/20 text-teal-200 border border-teal-400/30 text-xs font-medium mb-2">
+                            非暴力溝通 (NVC) 評估報告
+                        </span>
+                        <h2 id="report-title" class="text-2xl sm:text-3xl font-bold">溝通表現總結</h2>
+                        <p id="report-summary" class="text-slate-300 text-sm mt-2 leading-relaxed max-w-2xl"></p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center min-w-[120px] border border-white/10 self-end sm:self-center">
+                        <div class="text-xs text-slate-300 mb-1">NVC 契合度</div>
+                        <div class="text-3xl sm:text-4xl font-bold text-teal-300"><span id="report-score">--</span><span class="text-base font-normal text-slate-300">/100</span></div>
+                    </div>
+                </div>
+
+                <!-- 四大維度雷達/進度條分析 -->
+                <div class="p-6 sm:p-8 border-b border-stone-100">
+                    <h3 class="font-bold text-slate-800 mb-4 text-base">非暴力溝通四大要素表現</h3>
+                    <div id="nvc-dimensions" class="grid sm:grid-cols-2 gap-4">
+                        <!-- 動態生成四維度卡片 -->
+                    </div>
+                </div>
+
+                <!-- 講得好 vs 有待改善 -->
+                <div class="p-6 sm:p-8 grid md:grid-cols-2 gap-6 bg-stone-50/50">
+                    <!-- 講得好的地方 -->
+                    <div class="bg-white p-5 rounded-xl border border-emerald-200/80 shadow-xs">
+                        <div class="flex items-center space-x-2 text-emerald-700 font-bold mb-3">
+                            <span class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-sm">✓</span>
+                            <h4>講得好的內容（展現同理與情緒調節）</h4>
+                        </div>
+                        <ul id="good-points-list" class="space-y-3 text-sm text-slate-700">
+                            <!-- 動態插入 -->
+                        </ul>
+                    </div>
+
+                    <!-- 講得不好的地方 / 改善建議 -->
+                    <div class="bg-white p-5 rounded-xl border border-rose-200/80 shadow-xs">
+                        <div class="flex items-center space-x-2 text-rose-700 font-bold mb-3">
+                            <span class="w-6 h-6 rounded-full bg-rose-100 flex items-center justify-center text-sm">!</span>
+                            <h4>講得不好／可改善的內容（潛在暴力溝通風險）</h4>
+                        </div>
+                        <ul id="bad-points-list" class="space-y-3 text-sm text-slate-700">
+                            <!-- 動態插入 -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 逐句對話回顧與示範對照 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 sm:p-8">
+                <h3 class="font-bold text-slate-800 text-lg mb-2">關鍵對話逐句點評</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mb-6">檢視你在對話中的實際回應，對比非暴力溝通的替代說法：</p>
+                <div id="turn-by-turn-review" class="space-y-4">
+                    <!-- 動態插入逐句分析 -->
+                </div>
+            </div>
+
+            <!-- 劇本經典示範參考（可展開） -->
+            <div class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
+                <button onclick="toggleScriptModal()" class="w-full p-5 text-left flex items-center justify-between hover:bg-stone-50 transition">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">📖 參考《高回報投資騙局》非暴力溝通標準劇本</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">點擊展開查看完整示範對話，學習如何處理震驚情緒並引導共識</p>
+                    </div>
+                    <span id="script-toggle-icon" class="text-slate-400 font-bold text-lg">＋</span>
+                </button>
+                <div id="script-reference-content" class="hidden p-6 pt-0 border-t border-stone-100 bg-stone-50/50 text-xs sm:text-sm space-y-2.5 max-h-96 overflow-y-auto">
+                    <div class="p-3 bg-white rounded-lg border border-stone-200"><strong class="text-rose-700">妻子(小聲)：</strong> 嗯… 老公… Er … 我… 我有啲嘢…同你講呀…</div>
+                    <div class="p-3 bg-teal-50/70 rounded-lg border border-teal-100"><strong class="text-teal-800">丈夫(語氣平靜)：</strong> 嗯？見你吞吞吐吐咁，係咪身體唔舒服？坐低慢慢講。 <span class="text-xs text-teal-600 block mt-1">【觀察而非批判】</span></div>
+                    <div class="p-3 bg-white rounded-lg border border-stone-200"><strong class="text-rose-700">妻子(小聲，害怕)：</strong> ……我……我俾人呃咗……50萬呀…</div>
+                    <div class="p-3 bg-teal-50/70 rounded-lg border border-teal-100"><strong class="text-teal-800">丈夫(身體一震，緊握拳頭，深呼吸調息約10秒)：</strong> 老婆，我一聽到你俾人呃咗50萬，我的確好震驚、好肉痛。呢筆真係唔係小數目，夠我哋用足三、四年。 <span class="text-xs text-teal-600 block mt-1">【自我情緒調節 + 坦誠表達感受】</span></div>
+                    <div class="p-3 bg-teal-50/70 rounded-lg border border-teal-100"><strong class="text-teal-800">丈夫(再用呼吸調整自己，慢慢說)：</strong> 我明白你𠵱家好內疚、好自責。其實發生咩事？同我講講好嗎？ <span class="text-xs text-teal-600 block mt-1">【同理對方情緒，創造安全感】</span></div>
+                    <div class="p-3 bg-white rounded-lg border border-stone-200"><strong class="text-rose-700">妻子(慢慢講)：</strong> 我……我見你每日死慳死抵，咁辛苦，我心入面好想幫輕下你，想我哋之後退休過得舒服啲……</div>
+                    <div class="p-3 bg-teal-50/70 rounded-lg border border-teal-100"><strong class="text-teal-800">丈夫（點點頭，眼神無奈，但也有體諒）：</strong> 原來你係心疼我辛苦……多謝你嘅心意。 <span class="text-xs text-teal-600 block mt-1">【看見行為背後的善意需要】</span></div>
+                    <div class="p-3 bg-teal-50/70 rounded-lg border border-teal-100"><strong class="text-teal-800">丈夫（沉默一陣，深呼吸，表達自己的感受）：</strong> 我明白你嘅出發點係想我哋遲啲退休，都過得好啲。只係咁大筆錢，我事前一啲都唔知，我而家除咗因為筆錢無咗而覺得徬徨，我都有啲傷心，好似我哋之間的信任變得淺薄咗。用咁大筆錢之前，我哋無得傾下先，我都覺得無咗安全感。 <span class="text-xs text-teal-600 block mt-1">【深層感受與需要：信任與安全感】</span></div>
+                    <div class="p-3 bg-teal-50/70 rounded-lg border border-teal-100"><strong class="text-teal-800">丈夫 (溫和)：</strong> 咁，我哋一齊去差館報警先，好無？同埋之後如果我哋要駛錢多過一萬蚊，我哋都攞出嚟商量下先，一齊決定，好唔好？ <span class="text-xs text-teal-600 block mt-1">【具體、正向的請求與共識】</span></div>
+                </div>
+            </div>
+
+            <!-- 底部操作按鈕 -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <button onclick="resetApp()" class="w-full sm:w-auto px-8 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-sm transition">
+                    再次挑戰此情境
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 自訂提示訊息框 (取代 alert) -->
+    <div id="toast-box" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+        訊息提示
+    </div>
+
+    <script>
+        // ==========================================
+        // Vercel 後端 API 端點與核心狀態
+        // ==========================================
+        const BACKEND_API_URL = "/api/chat";
+
+        let chatHistory = []; // 儲存完整對話紀錄 [{ role: 'wife' | 'husband', text: string, mood?: string }]
+        let turnCount = 1;
+        const MAX_TURNS = 12;
+        let isWaitingForAI = false;
+
+        // 顯示 Toast 提示（取代 alert）
+        function showToast(message) {
+            const toast = document.getElementById('toast-box');
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        // 指數退避重試機制呼叫 Vercel 後端 (/api/chat)
+        async function fetchDeepSeekWithRetry(messages, maxRetries = 3) {
+            let delay = 1000;
+            const payload = {
+                messages: messages
+            };
+
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const response = await fetch(BACKEND_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData?.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const text = data?.choices?.[0]?.message?.content;
+                    if (!text) throw new Error("Empty response from server");
+                    return text;
+                } catch (err) {
+                    if (attempt === maxRetries) {
+                        throw err;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // ==========================================
+        // 介面切換與對話流程控制
+        // ==========================================
+        function startSimulation() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('report-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('header-actions').classList.remove('hidden');
+
+            chatHistory = [];
+            turnCount = 1;
+            document.getElementById('turn-counter').textContent = turnCount;
+            const messagesContainer = document.getElementById('chat-messages');
+            messagesContainer.innerHTML = '';
+
+            // 場景旁白
+            appendSystemNote('傍晚時分，你剛放工回到家。妻子坐在客廳梳化邊緣，雙手緊握，神色慌張……');
+
+            // 妻子第一句開場白（依據劇本）
+            const openingLine = "嗯… 老公… Er … 我… 我有啲嘢…同你講呀…";
+            const openingMood = "小聲、吞吞吐吐、十分害怕";
+            chatHistory.push({ role: 'wife', text: openingLine, mood: openingMood });
+            appendMessage('wife', openingLine, openingMood);
+            updateMoodBadge(openingMood);
+        }
+
+        function resetApp() {
+            document.getElementById('chat-screen').classList.add('hidden');
+            document.getElementById('report-screen').classList.add('hidden');
+            document.getElementById('analyzing-screen').classList.add('hidden');
+            document.getElementById('header-actions').classList.add('hidden');
+            document.getElementById('intro-screen').classList.remove('hidden');
+        }
+
+        function insertAction(actionText) {
+            const input = document.getElementById('user-input');
+            input.value = actionText + " " + input.value;
+            input.focus();
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleUserSubmit(e);
+            }
+        }
+
+        async function handleUserSubmit(e) {
+            e.preventDefault();
+            if (isWaitingForAI) return;
+
+            const inputEl = document.getElementById('user-input');
+            const userText = inputEl.value.trim();
+            if (!userText) {
+                showToast("請先輸入你想對妻子說的話");
+                return;
+            }
+
+            // 顯示玩家（丈夫）訊息
+            inputEl.value = '';
+            chatHistory.push({ role: 'husband', text: userText });
+            appendMessage('husband', userText);
+
+            // 鎖定輸入並顯示思考動畫
+            isWaitingForAI = true;
+            document.getElementById('send-btn').disabled = true;
+            const typingId = showTypingIndicator();
+
+            try {
+                const aiResponse = await getWifeResponse();
+                removeTypingIndicator(typingId);
+
+                chatHistory.push({
+                    role: 'wife',
+                    text: aiResponse.reply,
+                    mood: aiResponse.mood
+                });
+                appendMessage('wife', aiResponse.reply, aiResponse.mood);
+                updateMoodBadge(aiResponse.mood);
+
+                turnCount++;
+                document.getElementById('turn-counter').textContent = Math.min(turnCount, MAX_TURNS);
+
+                // 檢查是否達成結局條件或超過最大回合數
+                if (aiResponse.shouldEnd || turnCount > MAX_TURNS) {
+                    setTimeout(() => {
+                        appendSystemNote(aiResponse.endReason || "對話已告一段落，系統即將為你生成非暴力溝通分析報告……");
+                        setTimeout(() => {
+                            triggerEndConversation();
+                        }, 2200);
+                    }, 800);
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                showToast("連線稍微不穩，請再試一次發送");
+            } finally {
+                isWaitingForAI = false;
+                document.getElementById('send-btn').disabled = false;
+                document.getElementById('user-input').focus();
+            }
+        }
+
+        // ==========================================
+        // AI 扮演妻子邏輯 (DeepSeek JSON Output)
+        // ==========================================
+        async function getWifeResponse() {
+            const systemInstruction = `
+你現在是一個互動教育遊戲中的角色扮演 AI，你將扮演「妻子」，與扮演「丈夫」的玩家進行廣東話口語對話。
+
+【故事背景與事實設定】
+1. 妻子誤信熟人「陳太」介紹的「高回報養老投資」騙局（聲稱有10厘息），把夫妻二人近半的退休積蓄（共50萬港元）投入其中。
+2. 最初確實有收到萬幾兩萬蚊利息，所以妻子深信不疑，但最近發現騙局爆煲，50萬血本無歸。
+3. 妻子的內心動機（重要）：妻子並不是貪心或胡亂揮霍，而是看見丈夫平日「死慳死抵」、工作好辛苦，心疼丈夫，想「幫輕下你」，希望兩人將來退休生活過得舒服一點。而且因為見丈夫平時忙，不敢打擾，才沒有事前商量。
+4. 妻子目前還未報警，被騙後第一時間鼓起勇氣想告訴丈夫。
+
+【角色反應與情緒推進規則（必須嚴格遵守）】
+- 你必須使用自然、道地的香港廣東話口語（如：唔見咗、俾人呃咗、對唔住、幫輕下、死慳死抵、陳太、報警等）。
+- 情緒揭示節奏：
+  1. 剛開始時你很害怕，只敢說「唔見咗啲錢」，如果丈夫耐心詢問、語氣平靜，你才會說出「俾人呃咗50萬」。
+  2. 如果丈夫表現出**暴力溝通**（例如：大聲責罵、話你蠢/無知婦孺/貪心、不耐煩、嘲諷、翻舊帳）：你會感到恐懼、委屈、自責甚至崩潰哭泣（語氣吞吞吐吐、不斷道歉或求饒），並且**不敢說出自己想幫輕丈夫的真心話**。若丈夫連續嚴重羞辱或拒絕溝通，對話可在第5-7回合因「關係破裂/妻子崩潰無法繼續對話」而結束（shouldEnd: true）。
+  3. 如果丈夫表現出**非暴力溝通**（例如：深呼吸冷靜、客觀觀察、接納你的內疚、表達他自己的震驚與肉痛而非責罵、體諒你想幫輕他的心意、表達他對信任與安全感的需要）：你會感到被理解與安全，逐步坦白「陳太介紹10厘息」、「最初賺過萬幾蚊」、「心疼你辛苦想幫輕你」等細節，並誠懇道歉。
+  4. 當丈夫提出正向請求（例如：「一齊去報警」、「以後大額開支/過一萬蚊先一齊商量」），你會感動並答應，達成和解與共識，此時可設定 shouldEnd: true。
+
+【輸出格式要求】
+請嚴格以 JSON 格式回覆，包含以下欄位：
+{
+  "mood": "簡短描述妻子當下的神態與情緒（例如：小聲、害怕 / 眼泛淚光、委屈 / 感到安全、慢慢傾訴）",
+  "reply": "妻子的廣東話對白（約 20-80 字）",
+  "shouldEnd": false,
+  "endReason": "若 shouldEnd 為 true，請用一句話說明結束原因"
+}
+`;
+
+            const messages = [
+                { role: "system", content: systemInstruction },
+                ...chatHistory.map(msg => ({
+                    role: msg.role === 'husband' ? 'user' : 'assistant',
+                    content: msg.role === 'husband'
+                        ? `丈夫：${msg.text}`
+                        : JSON.stringify({ mood: msg.mood || '', reply: msg.text, shouldEnd: false })
+                }))
+            ];
+
+            const rawText = await fetchDeepSeekWithRetry(messages);
+            return JSON.parse(rawText);
+        }
+
+        // ==========================================
+        // 結束對話與生成 NVC 分析報告
+        // ==========================================
+        async function triggerEndConversation() {
+            // 確保至少有玩家發言過一次
+            const husbandMessages = chatHistory.filter(m => m.role === 'husband');
+            if (husbandMessages.length === 0) {
+                showToast("你還未與妻子對話呢！請先嘗試回應妻子。");
+                return;
+            }
+
+            document.getElementById('chat-screen').classList.add('hidden');
+            document.getElementById('header-actions').classList.add('hidden');
+            document.getElementById('analyzing-screen').classList.remove('hidden');
+
+            try {
+                const reportData = await generateNVCReport();
+                renderReport(reportData);
+                document.getElementById('analyzing-screen').classList.add('hidden');
+                document.getElementById('report-screen').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                document.getElementById('analyzing-screen').classList.add('hidden');
+                document.getElementById('chat-screen').classList.remove('hidden');
+                document.getElementById('header-actions').classList.remove('hidden');
+                showToast("分析報告生成失敗，請點擊右上角「結束對話並分析」重試。");
+            }
+        }
+
+        async function generateNVCReport() {
+            const analysisPrompt = `
+你是一位精通「非暴力溝通 (Nonviolent Communication, NVC)」與香港家庭理財輔導的專家。
+請根據以下《高回報投資騙局》劇本的暴力溝通與非暴力溝通對照標準，深入分析玩家（扮演「丈夫」）在剛才對話中的表現。
+
+【劇本中的非暴力溝通核心標準】
+1. 觀察 (Observation)：客觀陳述事實（如「見你吞吞吐吐」、「筆錢無咗」），避免貼標籤、道德批判或人身攻擊（如「無知婦孺」、「蠢」、「貪心」、「懶醒」、「鬼食泥咁」）。
+2. 感受 (Feeling)：能夠先自我調節情緒（如深呼吸），並坦誠表達自己的真實脆弱感受（如「好震驚、好肉痛」、「覺得徬徨」、「有啲傷心」、「無咗安全感」），而不是將憤怒化為指責。
+3. 需要 (Need)：連結自己背後的深層需要（如「退休保障」、「彼此信任」、「事前商量」），同時能同理妻子行為背後的善意需要（看見妻子是因為「心疼丈夫辛苦、想幫輕家庭、想退休過得舒服」才誤信騙局）。
+4. 請求 (Request)：提出具體、明確、正向且可執行的行動請求（如「一齊去差館報警」、「以後駛錢多過一萬蚊一齊商量決定」），而非威脅（如「呢件事我一世都會記住」）或卸責（「我點知點算」）。
+
+【完整對話紀錄】
+${chatHistory.map((m, idx) => `[回合 ${idx + 1}] ${m.role === 'husband' ? '丈夫(玩家)' : `妻子(${m.mood || ''})`}: ${m.text}`).join('\n')}
+
+請以繁體中文（結合香港地道語境）生成一份客觀、具建設性且溫暖的評估報告，嚴格按照以下 JSON 結構輸出（不可包含 Markdown 標記）：
+{
+  "overallScore": 85,
+  "title": "一句精準概括玩家溝通風格的評語標題",
+  "summary": "100字以內的整體溝通表現總結",
+  "dimensions": [
+    { "name": "觀察", "score": 80, "comment": "針對觀察維度的點評" },
+    { "name": "感受", "score": 80, "comment": "針對感受維度的點評" },
+    { "name": "需要", "score": 80, "comment": "針對需要維度的點評" },
+    { "name": "請求", "score": 80, "comment": "針對請求維度的點評" }
+  ],
+  "goodPoints": [
+    { "quote": "引用玩家講得好的原句", "analysis": "解釋為何符合非暴力溝通原則" }
+  ],
+  "badPoints": [
+    { "quote": "引用玩家講得不好或缺失的部分", "analysis": "解釋潛在風險及改善建議" }
+  ],
+  "turnReviews": [
+    {
+      "playerSaid": "玩家當時說的話",
+      "rating": "優秀 / 尚可 / 需改善",
+      "critique": "點評這句話的優缺點",
+      "nvcAlternative": "參考劇本精神的更佳廣東話非暴力溝通說法示範"
+    }
+  ]
+}
+`;
+
+            const messages = [
+                { role: "system", content: "你是一個只輸出合法 JSON 格式的非暴力溝通分析引擎。" },
+                { role: "user", content: analysisPrompt }
+            ];
+
+            const rawText = await fetchDeepSeekWithRetry(messages);
+            return JSON.parse(rawText);
+        }
+
+        // ==========================================
+        // 渲染分析報告 UI
+        // ==========================================
+        function renderReport(data) {
+            document.getElementById('report-score').textContent = data.overallScore;
+            document.getElementById('report-title').textContent = data.title;
+            document.getElementById('report-summary').textContent = data.summary;
+
+            // 1. 渲染四大維度
+            const dimContainer = document.getElementById('nvc-dimensions');
+            dimContainer.innerHTML = '';
+            (data.dimensions || []).forEach(dim => {
+                const barColor = dim.score >= 75 ? 'bg-teal-600' : (dim.score >= 50 ? 'bg-amber-500' : 'bg-rose-500');
+                const textColor = dim.score >= 75 ? 'text-teal-700' : (dim.score >= 50 ? 'text-amber-700' : 'text-rose-700');
+                dimContainer.innerHTML += `
+                    <div class="p-4 rounded-xl bg-stone-50 border border-stone-200/80">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="font-bold text-slate-800 text-sm">${escapeHTML(dim.name)}</span>
+                            <span class="font-bold text-sm ${textColor}">${dim.score} 分</span>
+                        </div>
+                        <div class="w-full bg-stone-200 rounded-full h-2 mb-2.5 overflow-hidden">
+                            <div class="${barColor} h-2 rounded-full transition-all duration-700" style="width: ${dim.score}%"></div>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">${escapeHTML(dim.comment)}</p>
+                    </div>
+                `;
+            });
+
+            // 2. 渲染講得好的地方
+            const goodList = document.getElementById('good-points-list');
+            goodList.innerHTML = '';
+            (data.goodPoints || []).forEach(item => {
+                goodList.innerHTML += `
+                    <li class="p-3 rounded-lg bg-emerald-50/60 border border-emerald-100">
+                        <div class="font-medium text-emerald-900 mb-1">「${escapeHTML(item.quote)}」</div>
+                        <p class="text-xs text-slate-600 leading-relaxed">${escapeHTML(item.analysis)}</p>
+                    </li>
+                `;
+            });
+
+            // 3. 渲染講得不好的地方
+            const badList = document.getElementById('bad-points-list');
+            badList.innerHTML = '';
+            (data.badPoints || []).forEach(item => {
+                badList.innerHTML += `
+                    <li class="p-3 rounded-lg bg-rose-50/60 border border-rose-100">
+                        <div class="font-medium text-rose-900 mb-1">「${escapeHTML(item.quote)}」</div>
+                        <p class="text-xs text-slate-600 leading-relaxed">${escapeHTML(item.analysis)}</p>
+                    </li>
+                `;
+            });
+
+            // 4. 渲染逐句對話回顧
+            const reviewContainer = document.getElementById('turn-by-turn-review');
+            reviewContainer.innerHTML = '';
+            (data.turnReviews || []).forEach((rev, index) => {
+                let badgeClass = "bg-amber-100 text-amber-800";
+                if (rev.rating.includes("優")) badgeClass = "bg-emerald-100 text-emerald-800";
+                if (rev.rating.includes("改善")) badgeClass = "bg-rose-100 text-rose-800";
+
+                reviewContainer.innerHTML += `
+                    <div class="p-4 sm:p-5 rounded-xl border border-stone-200 bg-stone-50/40 space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="text-sm font-bold text-slate-800">
+                                <span class="text-teal-700 mr-1.5">#${index + 1} 你的回應：</span>「${escapeHTML(rev.playerSaid)}」
+                            </div>
+                            <span class="shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeClass}">
+                                ${escapeHTML(rev.rating)}
+                            </span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            <strong class="text-slate-700">點評：</strong>${escapeHTML(rev.critique)}
+                        </p>
+                        <div class="p-3 rounded-lg bg-teal-50/80 border border-teal-100 text-xs sm:text-sm">
+                            <strong class="text-teal-800 block mb-1">💡 非暴力溝通參考示範：</strong>
+                            <span class="text-teal-950">「${escapeHTML(rev.nvcAlternative)}」</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ==========================================
+        // 聊天介面輔助函數
+        // ==========================================
+        function appendSystemNote(text) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'text-center my-2 fade-in';
+            div.innerHTML = `<span class="inline-block px-3.5 py-1.5 rounded-full bg-stone-200/70 text-slate-600 text-xs">${escapeHTML(text)}</span>`;
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function appendMessage(role, text, mood = '') {
+            const container = document.getElementById('chat-messages');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex flex-col ${role === 'husband' ? 'items-end' : 'items-start'} fade-in`;
+
+            if (role === 'wife') {
+                wrapper.innerHTML = `
+                    <div class="flex items-center space-x-2 mb-1 ml-1">
+                        <span class="text-xs font-bold text-rose-800">妻子</span>
+                        ${mood ? `<span class="text-[11px] text-slate-500 bg-stone-100 px-2 py-0.5 rounded-md">${escapeHTML(mood)}</span>` : ''}
+                    </div>
+                    <div class="max-w-[85%] sm:max-w-[75%] rounded-2xl rounded-tl-sm bg-white border border-stone-200 px-4 py-3 text-sm text-slate-800 shadow-xs leading-relaxed">
+                        ${escapeHTML(text)}
+                    </div>
+                `;
+            } else {
+                wrapper.innerHTML = `
+                    <div class="text-xs font-bold text-teal-800 mb-1 mr-1">你（丈夫）</div>
+                    <div class="max-w-[85%] sm:max-w-[75%] rounded-2xl rounded-tr-sm bg-teal-600 text-white px-4 py-3 text-sm shadow-xs leading-relaxed">
+                        ${escapeHTML(text)}
+                    </div>
+                `;
+            }
+
+            container.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const container = document.getElementById('chat-messages');
+            const id = 'typing-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'flex items-start fade-in';
+            div.innerHTML = `
+                <div class="rounded-2xl rounded-tl-sm bg-white border border-stone-200 px-4 py-3 shadow-xs flex space-x-1.5 items-center">
+                    <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                </div>
+            `;
+            container.appendChild(div);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function updateMoodBadge(mood) {
+            const badge = document.getElementById('wife-mood-badge');
+            badge.textContent = mood;
+            if (mood.includes('崩潰') || mood.includes('哭') || mood.includes('恐懼') || mood.includes('委屈')) {
+                badge.className = "px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-medium";
+            } else if (mood.includes('安全') || mood.includes('感動') || mood.includes('點頭') || mood.includes('承擔')) {
+                badge.className = "px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium";
+            } else {
+                badge.className = "px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium";
+            }
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chat-messages');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function toggleScriptModal() {
+            const content = document.getElementById('script-reference-content');
+            const icon = document.getElementById('script-toggle-icon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = '－';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = '＋';
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+    </script>
+</body>
+</html>
