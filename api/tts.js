@@ -1,34 +1,8 @@
-// api/tts.js - MiniMax 粵語成熟中年婦女聲線 (pitch: -2, speed: 0.90) ＋ 呼吸停頓與情緒聯動版
+// api/tts.js - 保留 DeepSeek 原生破碎語氣 ＋ 復刻老婦人聲線
 export default async function handler(req, res) {
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'Vercel 尚未設定 MINIMAX_API_KEY 環境變數' });
-  }
-
-  // 查詢可用系統音色清單 (/api/tts?list=1)
-  if (req.method === 'GET' && req.query.list === '1') {
-    try {
-      const voiceRes = await fetch('https://api.minimax.io/v1/get_voice', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey.trim()}`
-        },
-        body: JSON.stringify({ voice_type: 'system' })
-      });
-      const voiceData = await voiceRes.json();
-      const systemVoices = voiceData.system_voice || [];
-      const cantoneseVoices = systemVoices.filter(v =>
-        JSON.stringify(v).toLowerCase().includes('cantonese') ||
-        JSON.stringify(v).includes('粵') ||
-        JSON.stringify(v).includes('粤')
-      );
-      return res.status(200).json({
-        cantonese_voices: cantoneseVoices.length > 0 ? cantoneseVoices : systemVoices.slice(0, 40)
-      });
-    } catch (e) {
-      return res.status(500).json({ error: e.message });
-    }
   }
 
   if (req.method !== 'POST') {
@@ -36,23 +10,29 @@ export default async function handler(req, res) {
   }
 
   try {
+    const CLONED_WIFE_VOICE_ID = 'moss_audio_7b1027a9-e9bd-11f1-9c05-5e85d72bfa83';
+
     const {
       text,
       emotion = 'sad',
-      voiceId = 'Cantonese_GentleLady'
+      voiceId
     } = req.body || {};
 
     if (!text) {
       return res.status(400).json({ error: '缺少要朗讀的文字' });
     }
 
-    // 1. 提取括號內的神態小字
+    const finalVoiceId = (!voiceId || voiceId === 'Cantonese_GentleLady')
+      ? CLONED_WIFE_VOICE_ID
+      : voiceId;
+
+    // 1. 讀取括號內的神態小字，僅用來微調語速與音量
     const stageDirections = (text.match(/[（(]([^）)]+)[）)]/g) || []).join(' ');
     const isTremblingOrScared = /顫抖|害怕|恐慌|驚慌|戰戰兢兢|吞吞吐吐|結巴|小聲/.test(stageDirections);
     const isCryingOrGuilty = /流淚|哭|哽咽|眼泛淚光|內疚|委屈|傷心|後悔|低頭/.test(stageDirections);
     const isDefensive = /激動|大聲|防衛|急|反駁/.test(stageDirections);
 
-    // 2. 過濾括號內的動作描寫，保留廣東話對白
+    // 2. 過濾括號內的動作描寫，完整保留 DeepSeek 生成的原文破碎語氣
     let cleanText = text
       .replace(/\([^)]*\)/g, '')
       .replace(/（[^）]*）/g, '')
@@ -63,43 +43,34 @@ export default async function handler(req, res) {
       return res.status(204).end();
     }
 
-    // 3. 利用 MiniMax 專屬停頓標籤 <#秒數#> 製造猶豫、喘氣與哽咽氣口
+    // 3. 僅將原文已有的省略號「…」轉成自然氣口停頓，不額外加字
     cleanText = cleanText
-      .replace(/……+/g, '<#0.7#>')
-      .replace(/…+/g, '<#0.5#>');
+      .replace(/……+/g, '<#0.55#>')
+      .replace(/…+/g, '<#0.35#>');
 
-    if (isTremblingOrScared) {
-      cleanText = `唔…<#0.4#>` + cleanText.replace(/，/g, '，<#0.4#>');
-    } else if (isCryingOrGuilty) {
-      cleanText = `唉…<#0.45#>` + cleanText.replace(/，/g, '，<#0.35#>');
-    } else {
-      cleanText = cleanText.replace(/，/g, '，<#0.25#>');
-    }
-
-    // 4. 基礎語速設為 0.90，並依情緒微調語速與音量
     let finalEmotion = emotion;
-    let dynamicSpeed = 0.90;
+    let dynamicSpeed = 0.98;
     let dynamicVolume = 1.0;
 
     if (isTremblingOrScared) {
       finalEmotion = 'fearful';
-      dynamicSpeed = 0.86;
+      dynamicSpeed = 0.90;
       dynamicVolume = 0.80;
     } else if (isCryingOrGuilty) {
       finalEmotion = 'sad';
-      dynamicSpeed = 0.88;
-      dynamicVolume = 0.88;
+      dynamicSpeed = 0.92;
+      dynamicVolume = 0.85;
     } else if (isDefensive) {
       finalEmotion = 'angry';
-      dynamicSpeed = 1.02;
+      dynamicSpeed = 1.06;
       dynamicVolume = 1.12;
     } else {
       finalEmotion = 'calm';
-      dynamicSpeed = 0.90;
-      dynamicVolume = 1.0;
+      dynamicSpeed = 1.0;
+      dynamicVolume = 1.02;
     }
 
-    // 5. 呼叫 MiniMax speech-02-hd（設定 pitch: -2 呈現成熟中年婦女質感，不會變成男聲）
+    // 4. 呼叫 MiniMax speech-02-hd
     const response = await fetch('https://api.minimax.io/v1/t2a_v2', {
       method: 'POST',
       headers: {
@@ -112,10 +83,10 @@ export default async function handler(req, res) {
         stream: false,
         language_boost: 'Chinese,Yue',
         voice_setting: {
-          voice_id: voiceId,
+          voice_id: finalVoiceId,
           speed: dynamicSpeed,
           vol: dynamicVolume,
-          pitch: -2,
+          pitch: 0,
           emotion: finalEmotion
         },
         audio_setting: {
