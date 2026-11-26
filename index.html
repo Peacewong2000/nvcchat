@@ -100,8 +100,8 @@
             <span>🎙️</span> 真人廣東話語音對談模式
           </h3>
           <div class="text-xs text-amber-900/90 space-y-1.5 leading-relaxed">
-            <p>• <strong>免按鍵快速通話</strong>：進入對話後系統會自動聆聽你的廣東話，<strong>講完停頓 1 秒自動發送</strong>。</p>
-            <p>• <strong>神態情緒同步演繹</strong>：AI 妻子的聲音會跟隨括號內的神態細字（如顫抖、哽咽、釋懷）自動變化語氣與音量。</p>
+            <p>• <strong>免按鍵連續通話</strong>：進入對話後系統會自動聆聽你的廣東話，<strong>講完停頓 1.2 秒自動發送</strong>。</p>
+            <p>• <strong>防截斷抗干擾收音</strong>：自動過濾喇叭尾音，並高靈敏捕捉句尾輕聲說話。</p>
             <p>• 亦隨時支援文字輸入或動作輔助按鈕。</p>
           </div>
         </div>
@@ -333,7 +333,7 @@
     let isWaitingForAI = false;
 
     // --- 角色聲線配置 ---
-    const CURRENT_VOICE_ID = 'Cantonese_GentleLady';
+    const CURRENT_VOICE_ID = 'moss_audio_7b1027a9-e9bd-11f1-9c05-5e85d72bfa83';
 
     // --- 語音通話與音訊狀態 ---
     let autoTTSEnabled = true;
@@ -342,15 +342,16 @@
     let isWifeSpeaking = false;
     let currentAudio = null;
 
-    // Web Audio API 錄音與 VAD 變數（加速停頓偵測至 1.0 秒）
+    // Web Audio API 錄音與 VAD 變數（防尾音冷卻 ＋ 抗自動增益衰減版）
     let audioContext = null;
     let mediaStream = null;
     let scriptProcessor = null;
     let recordedChunks = [];
     let isUserSpeaking = false;
     let silenceStartTime = null;
-    const SILENCE_THRESHOLD = 0.012;
-    const SILENCE_DURATION_MS = 1000; // 講完停頓 1.0 秒立即發送，大幅加快對話節奏
+    let cooldownUntil = 0;             // 妻子講完後的防尾音冷卻時間戳
+    const SILENCE_THRESHOLD = 0.006;   // 調低門檻，防止句尾氣音或瀏覽器AGC壓低音量時被誤判結束
+    const SILENCE_DURATION_MS = 1200;  // 停頓 1.2 秒送出，兼顧流暢度與不搶話
 
     // --- 劇本與系統提示詞（年約 60 歲退休年齡妻子設定） ---
     const WIFE_SYSTEM_PROMPT = `
@@ -431,7 +432,7 @@
 }
 `;
 
-    // --- 強化版 JSON 提取與容錯修復（徹底解決 Expected ',' or ']' 報錯） ---
+    // --- 強化版 JSON 提取與容錯修復 ---
     function safeParseAIJson(rawText) {
       const startIdx = rawText.indexOf('{');
       const endIdx = rawText.lastIndexOf('}');
@@ -441,18 +442,15 @@
 
       let jsonStr = rawText.slice(startIdx, endIdx + 1);
 
-      // 1. 直接嘗試標準解析
       try {
         return JSON.parse(jsonStr);
       } catch (e1) {
-        // 2. 常見修復：移除結尾多餘逗號 (trailing commas) 與未轉義的控制換行符
         let repaired = jsonStr
           .replace(/,\s*([}\]])/g, '$1')
           .replace(/[\u0000-\u001F]+/g, ' ');
         try {
           return JSON.parse(repaired);
         } catch (e2) {
-          // 3. 若字串內部夾雜了未轉義的英文雙引號，逐字掃描修復
           let fixedChars = '';
           let inString = false;
           for (let i = 0; i < repaired.length; i++) {
@@ -463,7 +461,6 @@
                 inString = true;
                 fixedChars += ch;
               } else {
-                // 檢查下一個非空白字元是否為 JSON 結構符號 (: , } ])
                 let j = i + 1;
                 while (j < repaired.length && /\s/.test(repaired[j])) j++;
                 const nextChar = repaired[j];
@@ -471,7 +468,6 @@
                   inString = false;
                   fixedChars += ch;
                 } else {
-                  // 這是字串內部未轉義的雙引號，轉成中文引號避免破壞結構
                   fixedChars += '」';
                 }
               }
@@ -531,7 +527,7 @@
       }
     }
 
-    // --- MiniMax TTS：播放帶有情緒起伏的年老婦女香港廣東話語音 ---
+    // --- MiniMax TTS：播放復刻老婦人香港廣東話語音 ---
     async function playWifeVoice(text, emotion = 'fearful', voiceId = CURRENT_VOICE_ID) {
       if (!autoTTSEnabled && !isHandsFreeActive) return;
 
@@ -575,6 +571,12 @@
         console.warn('語音播放略過:', err);
       } finally {
         isWifeSpeaking = false;
+        // 重置錄音緩衝並加入 400ms 尾音冷卻，防止喇叭回音與瀏覽器 AGC 干擾導致提早截斷
+        recordedChunks = [];
+        isUserSpeaking = false;
+        silenceStartTime = null;
+        cooldownUntil = Date.now() + 400;
+
         if (isHandsFreeActive && !isMicPaused && !isWaitingForAI) {
           updateVoiceUIState('listening');
         } else if (!isHandsFreeActive) {
@@ -630,7 +632,8 @@
         silenceStartTime = null;
 
         scriptProcessor.onaudioprocess = (event) => {
-          if (!isHandsFreeActive || isMicPaused || isWifeSpeaking || isWaitingForAI) {
+          // 妻子講話中、等待 AI 回應或處於 400ms 尾音冷卻期時，完全忽略麥克風訊號
+          if (!isHandsFreeActive || isMicPaused || isWifeSpeaking || isWaitingForAI || Date.now() < cooldownUntil) {
             return;
           }
 
@@ -739,12 +742,12 @@
         bar.className = 'bg-emerald-950 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-emerald-400', 'mic-listening');
         title.textContent = '🟢 聆聽緊你講廣東話…';
-        sub.textContent = '直接開聲講即可，講完停頓 1 秒會自動發送';
+        sub.textContent = '直接開聲講即可，講完停頓 1.2 秒會自動發送';
       } else if (state === 'user_speaking') {
         bar.className = 'bg-emerald-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-emerald-300', 'mic-listening');
         title.textContent = '🎙️ 收到你嘅聲音，繼續講…';
-        sub.textContent = '講完停頓 1 秒就會自動轉成文字並發送';
+        sub.textContent = '講完停頓 1.2 秒就會自動轉成文字並發送';
       } else if (state === 'transcribing') {
         bar.className = 'bg-amber-950 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-amber-400');
@@ -1030,7 +1033,7 @@
       generateNVCReport("玩家手動結束對話以進行評估");
     }
 
-    // --- 生成 NVC 分析報告（支援自動重試與 JSON 容錯） ---
+    // --- 生成 NVC 分析報告 ---
     async function generateNVCReport(endReason) {
       document.getElementById('chat-screen').classList.add('hidden');
       document.getElementById('analyzing-screen').classList.remove('hidden');
