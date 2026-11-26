@@ -1,4 +1,4 @@
-// api/tts.js - 保留 DeepSeek 原生破碎語氣 ＋ 復刻老婦人聲線
+// api/tts.js - 復刻老婦人聲線 ＋ 自然流暢語速 ＋ 保留 DeepSeek 原生語氣版
 export default async function handler(req, res) {
   const apiKey = process.env.MINIMAX_API_KEY;
   if (!apiKey) {
@@ -26,13 +26,13 @@ export default async function handler(req, res) {
       ? CLONED_WIFE_VOICE_ID
       : voiceId;
 
-    // 1. 讀取括號內的神態小字，僅用來微調語速與音量
+    // 1. 讀取括號內的神態小字，調整語速與音量
     const stageDirections = (text.match(/[（(]([^）)]+)[）)]/g) || []).join(' ');
     const isTremblingOrScared = /顫抖|害怕|恐慌|驚慌|戰戰兢兢|吞吞吐吐|結巴|小聲/.test(stageDirections);
     const isCryingOrGuilty = /流淚|哭|哽咽|眼泛淚光|內疚|委屈|傷心|後悔|低頭/.test(stageDirections);
     const isDefensive = /激動|大聲|防衛|急|反駁/.test(stageDirections);
 
-    // 2. 過濾括號內的動作描寫，完整保留 DeepSeek 生成的原文破碎語氣
+    // 2. 過濾括號內的動作描寫，保留 DeepSeek 原生破碎語氣
     let cleanText = text
       .replace(/\([^)]*\)/g, '')
       .replace(/（[^）]*）/g, '')
@@ -43,30 +43,30 @@ export default async function handler(req, res) {
       return res.status(204).end();
     }
 
-    // 3. 僅將原文已有的省略號「…」轉成自然氣口停頓，不額外加字
+    // 3. 適度縮短省略號停頓時間，保持自然緊湊節奏
     cleanText = cleanText
-      .replace(/……+/g, '<#0.55#>')
-      .replace(/…+/g, '<#0.35#>');
+      .replace(/……+/g, '<#0.35#>')
+      .replace(/…+/g, '<#0.2#>');
 
     let finalEmotion = emotion;
-    let dynamicSpeed = 0.98;
+    let dynamicSpeed = 1.08;
     let dynamicVolume = 1.0;
 
     if (isTremblingOrScared) {
       finalEmotion = 'fearful';
-      dynamicSpeed = 0.90;
-      dynamicVolume = 0.80;
+      dynamicSpeed = 1.03;
+      dynamicVolume = 0.85;
     } else if (isCryingOrGuilty) {
       finalEmotion = 'sad';
-      dynamicSpeed = 0.92;
-      dynamicVolume = 0.85;
+      dynamicSpeed = 1.05;
+      dynamicVolume = 0.90;
     } else if (isDefensive) {
       finalEmotion = 'angry';
-      dynamicSpeed = 1.06;
+      dynamicSpeed = 1.15;
       dynamicVolume = 1.12;
     } else {
       finalEmotion = 'calm';
-      dynamicSpeed = 1.0;
+      dynamicSpeed = 1.10;
       dynamicVolume = 1.02;
     }
 
