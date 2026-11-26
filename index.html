@@ -100,8 +100,8 @@
             <span>🎙️</span> 真人廣東話語音對談模式
           </h3>
           <div class="text-xs text-amber-900/90 space-y-1.5 leading-relaxed">
-            <p>• <strong>免按鍵連續通話</strong>：進入對話後系統會自動聆聽你的廣東話，<strong>講完停頓 1.2 秒自動發送</strong>。</p>
-            <p>• <strong>防截斷抗干擾收音</strong>：自動過濾喇叭尾音，並高靈敏捕捉句尾輕聲說話。</p>
+            <p>• <strong>雙引擎高精準香港粵語辨識</strong>：自動優先使用原生廣東話串流辨識，邊講邊顯示文字，準確捕捉港式口語。</p>
+            <p>• <strong>防吞字前置緩衝</strong>：自動保留開口前 0.3 秒音訊，不會漏掉開頭第一個字。</p>
             <p>• 亦隨時支援文字輸入或動作輔助按鈕。</p>
           </div>
         </div>
@@ -208,7 +208,7 @@
           <textarea
             id="user-input"
             rows="2"
-            placeholder="以丈夫身分回應（可直接講廣東話，或在此輸入廣東話對白…）"
+            placeholder="以丈夫身分回應（可直接講廣東話，或在此輸入／修改廣東話對白…）"
             class="flex-1 resize-none rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30 focus:border-amber-600"
             onkeydown="handleKeyDown(event)"
           ></textarea>
@@ -342,18 +342,26 @@
     let isWifeSpeaking = false;
     let currentAudio = null;
 
-    // Web Audio API 錄音與 VAD 變數（防尾音冷卻 ＋ 抗自動增益衰減版）
+    // 語音辨識雙引擎變數（優先使用原生 zh-HK 串流辨識，不支援時退回 Azure WAV）
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let nativeRecognition = null;
+    let useNativeSTT = Boolean(SpeechRecognitionAPI);
+    let nativeTranscriptBuffer = '';
+    let nativeSilenceTimer = null;
+
+    // Azure 備援錄音與 VAD 變數（含 0.3 秒前置緩衝防吞字）
     let audioContext = null;
     let mediaStream = null;
     let scriptProcessor = null;
+    let preRollBuffer = []; // 保留開口前約 0.3 秒音訊，防止吞掉第一個字
     let recordedChunks = [];
     let isUserSpeaking = false;
     let silenceStartTime = null;
-    let cooldownUntil = 0;             // 妻子講完後的防尾音冷卻時間戳
-    const SILENCE_THRESHOLD = 0.006;   // 調低門檻，防止句尾氣音或瀏覽器AGC壓低音量時被誤判結束
-    const SILENCE_DURATION_MS = 1200;  // 停頓 1.2 秒送出，兼顧流暢度與不搶話
+    let cooldownUntil = 0;
+    const SILENCE_THRESHOLD = 0.006;
+    const SILENCE_DURATION_MS = 1300;
 
-    // --- 劇本與系統提示詞（年約 60 歲退休年齡妻子設定） ---
+    // --- 劇本與系統提示詞 ---
     const WIFE_SYSTEM_PROMPT = `
 你現在正在進行一個「家庭理財非暴力溝通 (NVC)」教育模擬。
 你扮演【年約六十歲的妻子】，玩家扮演【年近退休的丈夫】。
@@ -370,7 +378,7 @@
 2. **緊扣非暴力溝通的真實人性反應**：
    - **如果丈夫（玩家）語氣粗暴、指責、辱罵**（如罵你蠢、老糊塗、無知婦孺、貪心、問你當佢死㗎）：你會變得極度害怕、退縮、哭泣、結巴，或者委屈防衛（例如：「我…我唔係貪心呀！我見你年紀大仲咁辛苦，我只係想幫輕下你…」），安全感大幅下降，不敢說出細節。
    - **如果丈夫能先調息冷靜、語氣溫和、表達理解你的出發點、或坦誠分享他的震驚/傷心/缺乏安全感（而不人身攻擊）**：你會漸漸感到安全，放下防衛，流淚坦白整件事的經過（陳太介紹10厘息、最初賺萬幾蚊、心疼丈夫辛苦），並真誠道歉。
-3. **簡潔自然節奏（每次回覆控制在 40–75 字以內，讓口語對答更流暢明快）**：
+3. **簡潔自然節奏（每次回覆控制在 40–75 字以內）**：
    - 開場吞吞吐吐說有事想講；丈夫追問時才戰戰兢兢承認「唔見咗錢」->「俾人呃咗50萬」->「陳太10厘息與想幫輕丈夫」->「未報警」。
 4. **結束條件判斷**：
    - 當雙方達成共識（決定一齊去報警、約定日後大額支出先商量）、或衝突破裂達 5 輪以上、或對話超過 10 輪時，將 \`should_end\` 設為 \`true\`。
@@ -396,9 +404,10 @@
 3. **需要 (Need)**：能否看見自己內在的核心需要（如「退休養老保障」、「被尊重與知情權」、「夫妻信任」），同時同理妻子背後的正向需要（如「想幫輕丈夫」、「希望老兩口生活安穩」）。
 4. **請求 (Request)**：能否提出具體、正向、可執行的合作請求（如「我哋一齊去差館報警好無？」、「之後駛錢多過一萬蚊先商量一齊決定好唔好？」），而非威脅或翻舊帳。
 
-【重要 JSON 語法規則】
+【極度重要 JSON 語法規則】
 1. 必須回傳單一合法 JSON 物件，不要包含 \`\`\`json 標記。
-2. **極度重要**：所有字串值內部（包含 quote、analysis、nvc_example）**絕對禁止出現英文雙引號 " 與換行符號**！引用玩家原句時請統一使用中文引號「」，否則會導致 JSON 解析失敗。
+2. 所有字串值內部（包含 quote、analysis、nvc_example）**絕對禁止出現英文雙引號 " 與換行符號**！引用玩家原句時請統一使用中文引號「」。
+3. 陣列 \`good_points\`、\`bad_points\`、\`rewrites\` 內的每個物件之間**必須用逗號 , 分隔**。
 
 【輸出格式結構】
 {
@@ -432,7 +441,7 @@
 }
 `;
 
-    // --- 強化版 JSON 提取與容錯修復 ---
+    // --- 終極強化版 JSON 提取與自動修復器（徹底解決陣列漏逗號與未轉義引號） ---
     function safeParseAIJson(rawText) {
       const startIdx = rawText.indexOf('{');
       const endIdx = rawText.lastIndexOf('}');
@@ -442,15 +451,26 @@
 
       let jsonStr = rawText.slice(startIdx, endIdx + 1);
 
+      // 1. 直接嘗試標準解析
       try {
         return JSON.parse(jsonStr);
       } catch (e1) {
+        // 2. 修復常見結構錯誤：
+        //    (a) 移除尾隨多餘逗號
+        //    (b) 補全物件之間漏掉的逗號: } { -> }, {
+        //    (c) 補全字串屬性之間漏掉的逗號: "value" "nextKey": -> "value", "nextKey":
+        //    (d) 清除換行控制字元
         let repaired = jsonStr
+          .replace(/[\u0000-\u001F]+/g, ' ')
           .replace(/,\s*([}\]])/g, '$1')
-          .replace(/[\u0000-\u001F]+/g, ' ');
+          .replace(/\}\s*\{/g, '}, {')
+          .replace(/\]\s*\[/g, '], [')
+          .replace(/"\s+"/g, '", "');
+
         try {
           return JSON.parse(repaired);
         } catch (e2) {
+          // 3. 逐字元掃描修復字串內部未轉義的英文雙引號
           let fixedChars = '';
           let inString = false;
           for (let i = 0; i < repaired.length; i++) {
@@ -475,6 +495,10 @@
               fixedChars += ch;
             }
           }
+          // 最後再確保一次沒有相鄰物件漏逗號
+          fixedChars = fixedChars
+            .replace(/\}\s*\{/g, '}, {')
+            .replace(/,\s*([}\]])/g, '$1');
           return JSON.parse(fixedChars);
         }
       }
@@ -487,7 +511,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: messages,
-          temperature: expectReport ? 0.3 : 0.7
+          temperature: expectReport ? 0.2 : 0.7
         })
       });
 
@@ -537,6 +561,7 @@
       }
 
       isWifeSpeaking = true;
+      pauseActiveSTTForWife();
       updateVoiceUIState('speaking');
 
       try {
@@ -547,8 +572,6 @@
         });
 
         if (!response.ok || response.status === 204) {
-          const errData = await response.json().catch(() => ({}));
-          console.warn('MiniMax TTS 錯誤:', errData.error || response.status);
           throw new Error('TTS 無法播放');
         }
 
@@ -571,14 +594,19 @@
         console.warn('語音播放略過:', err);
       } finally {
         isWifeSpeaking = false;
-        // 重置錄音緩衝並加入 400ms 尾音冷卻，防止喇叭回音與瀏覽器 AGC 干擾導致提早截斷
         recordedChunks = [];
+        preRollBuffer = [];
         isUserSpeaking = false;
         silenceStartTime = null;
-        cooldownUntil = Date.now() + 400;
+        cooldownUntil = Date.now() + 450;
 
         if (isHandsFreeActive && !isMicPaused && !isWaitingForAI) {
-          updateVoiceUIState('listening');
+          setTimeout(() => {
+            if (isHandsFreeActive && !isMicPaused && !isWifeSpeaking && !isWaitingForAI) {
+              resumeActiveSTT();
+              updateVoiceUIState('listening');
+            }
+          }, 450);
         } else if (!isHandsFreeActive) {
           updateVoiceUIState('idle');
         }
@@ -603,7 +631,25 @@
       }
     }
 
-    // --- 真人免按鍵連續通話控制 ---
+    // --- 雙引擎廣東話辨識控制（引擎 1：原生 zh-HK 串流辨識；引擎 2：Azure 備援） ---
+    function pauseActiveSTTForWife() {
+      if (useNativeSTT && nativeRecognition) {
+        try { nativeRecognition.abort(); } catch (e) {}
+      }
+      clearTimeout(nativeSilenceTimer);
+      nativeTranscriptBuffer = '';
+    }
+
+    function resumeActiveSTT() {
+      if (!isHandsFreeActive || isMicPaused || isWifeSpeaking || isWaitingForAI) return;
+      if (useNativeSTT && nativeRecognition) {
+        try {
+          nativeTranscriptBuffer = '';
+          nativeRecognition.start();
+        } catch (e) {}
+      }
+    }
+
     async function toggleHandsFreeCall() {
       if (isHandsFreeActive) {
         stopHandsFreeCall();
@@ -613,6 +659,94 @@
     }
 
     async function startHandsFreeCall() {
+      // 優先嘗試瀏覽器原生香港廣東話串流引擎（Android Chrome / Desktop Chrome 準確度極高）
+      if (useNativeSTT) {
+        try {
+          nativeRecognition = new SpeechRecognitionAPI();
+          nativeRecognition.lang = 'zh-HK';
+          nativeRecognition.continuous = true;
+          nativeRecognition.interimResults = true;
+
+          nativeRecognition.onstart = () => {
+            if (isHandsFreeActive && !isMicPaused && !isWifeSpeaking && !isWaitingForAI) {
+              updateVoiceUIState('listening');
+            }
+          };
+
+          nativeRecognition.onresult = (event) => {
+            if (!isHandsFreeActive || isMicPaused || isWifeSpeaking || isWaitingForAI) return;
+
+            let interimText = '';
+            let finalText = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const transcript = event.results[i][0].transcript;
+              if (event.results[i].isFinal) {
+                finalText += transcript;
+              } else {
+                interimText += transcript;
+              }
+            }
+
+            if (finalText) {
+              nativeTranscriptBuffer += finalText;
+            }
+
+            const currentDisplay = (nativeTranscriptBuffer + interimText).trim();
+            if (currentDisplay) {
+              updateVoiceUIState('user_speaking');
+              // 即時將辨識到的廣東話預覽在輸入框，讓你知道系統聽得準不準
+              document.getElementById('user-input').placeholder = `正在聆聽：${currentDisplay}`;
+
+              clearTimeout(nativeSilenceTimer);
+              nativeSilenceTimer = setTimeout(() => {
+                const textToSend = (nativeTranscriptBuffer + interimText).trim();
+                nativeTranscriptBuffer = '';
+                document.getElementById('user-input').placeholder = '以丈夫身分回應（可直接講廣東話，或在此輸入／修改廣東話對白…）';
+                if (textToSend && isHandsFreeActive && !isWifeSpeaking && !isWaitingForAI) {
+                  try { nativeRecognition.abort(); } catch (e) {}
+                  const inputEl = document.getElementById('user-input');
+                  const existingAction = inputEl.value.trim();
+                  inputEl.value = '';
+                  const finalMsg = existingAction ? `${existingAction} ${textToSend}` : textToSend;
+                  sendUserMessageText(finalMsg);
+                }
+              }, 1300);
+            }
+          };
+
+          nativeRecognition.onerror = (event) => {
+            console.warn('原生粵語辨識事件:', event.error);
+            if (event.error === 'not-allowed') {
+              alert('請允許瀏覽器使用麥克風權限！');
+              stopHandsFreeCall();
+            } else if (event.error === 'service-not-allowed' || event.error === 'language-not-supported') {
+              // 若此裝置不支援原生粵語，自動無縫切換為 Azure 雲端 STT 引擎
+              useNativeSTT = false;
+              startAzureFallbackSTT();
+            }
+          };
+
+          nativeRecognition.onend = () => {
+            if (isHandsFreeActive && !isMicPaused && !isWifeSpeaking && !isWaitingForAI) {
+              setTimeout(() => resumeActiveSTT(), 200);
+            }
+          };
+
+          activateCallUI();
+          if (!isWifeSpeaking && !isWaitingForAI) {
+            nativeRecognition.start();
+          }
+          return;
+        } catch (err) {
+          useNativeSTT = false;
+        }
+      }
+
+      // 備援引擎：Azure 雲端香港廣東話 STT（含 0.3 秒前置緩衝防吞字）
+      await startAzureFallbackSTT();
+    }
+
+    async function startAzureFallbackSTT() {
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({
           audio: {
@@ -628,16 +762,16 @@
 
         scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
         recordedChunks = [];
+        preRollBuffer = [];
         isUserSpeaking = false;
         silenceStartTime = null;
 
         scriptProcessor.onaudioprocess = (event) => {
-          // 妻子講話中、等待 AI 回應或處於 400ms 尾音冷卻期時，完全忽略麥克風訊號
           if (!isHandsFreeActive || isMicPaused || isWifeSpeaking || isWaitingForAI || Date.now() < cooldownUntil) {
             return;
           }
 
-          const inputData = event.inputBuffer.getChannelData(0);
+          const inputData = new Float32Array(event.inputBuffer.getChannelData(0));
           let sum = 0;
           for (let i = 0; i < inputData.length; i++) {
             sum += inputData[i] * inputData[i];
@@ -647,12 +781,15 @@
           if (rms > SILENCE_THRESHOLD) {
             if (!isUserSpeaking) {
               isUserSpeaking = true;
+              // 把開口前 0.3 秒的音訊一併放進錄音開頭，避免吞掉第一個字
+              recordedChunks = [...preRollBuffer];
+              preRollBuffer = [];
               updateVoiceUIState('user_speaking');
             }
             silenceStartTime = null;
-            recordedChunks.push(new Float32Array(inputData));
+            recordedChunks.push(inputData);
           } else if (isUserSpeaking) {
-            recordedChunks.push(new Float32Array(inputData));
+            recordedChunks.push(inputData);
             if (!silenceStartTime) {
               silenceStartTime = Date.now();
             } else if (Date.now() - silenceStartTime >= SILENCE_DURATION_MS) {
@@ -662,23 +799,19 @@
               silenceStartTime = null;
               processRecordedSpeech(chunksToProcess, audioContext.sampleRate);
             }
+          } else {
+            // 維持最近 4 個音訊區塊（約 0.35 秒）作為開口前置緩衝
+            preRollBuffer.push(inputData);
+            if (preRollBuffer.length > 4) {
+              preRollBuffer.shift();
+            }
           }
         };
 
         source.connect(scriptProcessor);
         scriptProcessor.connect(audioContext.destination);
 
-        isHandsFreeActive = true;
-        isMicPaused = false;
-        autoTTSEnabled = true;
-        document.getElementById('tts-icon').textContent = '🔊';
-        document.getElementById('tts-label').textContent = '粵語女聲：開';
-
-        document.getElementById('pause-mic-btn').classList.remove('hidden');
-        const toggleBtn = document.getElementById('call-toggle-btn');
-        toggleBtn.className = 'text-xs bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm';
-        toggleBtn.innerHTML = '<span>📴</span><span>結束語音通話</span>';
-
+        activateCallUI();
         if (!isWifeSpeaking && !isWaitingForAI) {
           updateVoiceUIState('listening');
         }
@@ -687,12 +820,31 @@
       }
     }
 
+    function activateCallUI() {
+      isHandsFreeActive = true;
+      isMicPaused = false;
+      autoTTSEnabled = true;
+      document.getElementById('tts-icon').textContent = '🔊';
+      document.getElementById('tts-label').textContent = '粵語女聲：開';
+
+      document.getElementById('pause-mic-btn').classList.remove('hidden');
+      const toggleBtn = document.getElementById('call-toggle-btn');
+      toggleBtn.className = 'text-xs bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm';
+      toggleBtn.innerHTML = '<span>📴</span><span>結束語音通話</span>';
+    }
+
     function stopHandsFreeCall() {
       isHandsFreeActive = false;
       isMicPaused = false;
       isUserSpeaking = false;
       recordedChunks = [];
+      preRollBuffer = [];
+      clearTimeout(nativeSilenceTimer);
 
+      if (nativeRecognition) {
+        try { nativeRecognition.abort(); } catch (e) {}
+        nativeRecognition = null;
+      }
       if (scriptProcessor) {
         scriptProcessor.disconnect();
         scriptProcessor = null;
@@ -719,14 +871,21 @@
       const pauseBtn = document.getElementById('pause-mic-btn');
       if (isMicPaused) {
         recordedChunks = [];
+        preRollBuffer = [];
         isUserSpeaking = false;
+        pauseActiveSTTForWife();
         pauseBtn.innerHTML = '▶️ 繼續收音講嘢';
         pauseBtn.className = 'text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-medium transition';
         updateVoiceUIState('paused');
       } else {
         pauseBtn.innerHTML = '⏸️ 暫停收音（深呼吸）';
         pauseBtn.className = 'text-xs bg-stone-700 hover:bg-stone-600 text-amber-200 px-3 py-1.5 rounded-lg font-medium transition border border-stone-600';
-        updateVoiceUIState(isWifeSpeaking ? 'speaking' : 'listening');
+        if (!isWifeSpeaking && !isWaitingForAI) {
+          resumeActiveSTT();
+          updateVoiceUIState('listening');
+        } else {
+          updateVoiceUIState('speaking');
+        }
       }
     }
 
@@ -742,16 +901,16 @@
         bar.className = 'bg-emerald-950 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-emerald-400', 'mic-listening');
         title.textContent = '🟢 聆聽緊你講廣東話…';
-        sub.textContent = '直接開聲講即可，講完停頓 1.2 秒會自動發送';
+        sub.textContent = '直接開聲講即可，講完停頓 1.3 秒會自動發送';
       } else if (state === 'user_speaking') {
         bar.className = 'bg-emerald-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-emerald-300', 'mic-listening');
         title.textContent = '🎙️ 收到你嘅聲音，繼續講…';
-        sub.textContent = '講完停頓 1.2 秒就會自動轉成文字並發送';
+        sub.textContent = '講完停頓 1.3 秒就會自動發送';
       } else if (state === 'transcribing') {
         bar.className = 'bg-amber-950 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-amber-400');
-        title.textContent = '⏳ 正在辨識你的廣東話…';
+        title.textContent = '⏳ 正在處理你的廣東話…';
         sub.textContent = '香港粵語引擎處理中';
       } else if (state === 'speaking') {
         bar.className = 'bg-amber-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
@@ -771,7 +930,7 @@
       }
     }
 
-    // --- 將錄音轉成 16kHz WAV 並送到 /api/stt ---
+    // --- 將錄音轉成 16kHz WAV 並送到 /api/stt（Azure 備援引擎） ---
     async function processRecordedSpeech(chunks, originalSampleRate) {
       if (!chunks || chunks.length === 0) return;
 
@@ -980,6 +1139,7 @@
         setLoadingState(false);
         alert('發生錯誤：' + err.message);
         if (isHandsFreeActive && !isMicPaused) {
+          resumeActiveSTT();
           updateVoiceUIState('listening');
         }
       }
@@ -1047,7 +1207,7 @@
         { role: 'system', content: ANALYZER_SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `對話結束原因：${endReason}\n\n【完整對話紀錄】\n${transcript}\n\n請根據以上對話紀錄，嚴格按照非暴力溝通標準分析丈夫（玩家）講得好及講得不好的內容，並輸出合法 JSON 報告（切勿在文字內部使用英文雙引號）。`
+          content: `對話結束原因：${endReason}\n\n【完整對話紀錄】\n${transcript}\n\n請根據以上對話紀錄，嚴格按照非暴力溝通標準分析丈夫（玩家）講得好及講得不好的內容，並輸出合法 JSON 報告（確保陣列元素之間都有逗號分隔，且字串內部絕不使用英文雙引號）。`
         }
       ];
 
