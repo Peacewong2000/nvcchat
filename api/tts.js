@@ -1,64 +1,88 @@
-// api/tts.js - 優化版 Azure 香港粵語女聲（加入自然呼吸停頓，消除機械感）
+// api/tts.js - MiniMax 粵語情感與多角色語音合成引擎 (speech-02-hd)
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const speechKey = process.env.AZURE_SPEECH_KEY;
-  const speechRegion = process.env.AZURE_SPEECH_REGION || 'eastasia';
-
-  if (!speechKey) {
-    return res.status(500).json({ error: '未設定 AZURE_SPEECH_KEY 環境變數' });
+  const apiKey = process.env.MINIMAX_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Vercel 尚未設定 MINIMAX_API_KEY 環境變數' });
   }
 
   try {
-    const { text, trustScore = 25 } = req.body;
-    if (!text) return res.status(400).json({ error: '缺少文字' });
+    // 接收文字、情緒標籤 (emotion)、角色音色 ID (voiceId)
+    const {
+      text,
+      emotion = 'sad',
+      voiceId = 'Cantonese_GentleLady' // 預設：溫柔成熟粵語女聲（日後可傳入長者或兒童 ID）
+    } = req.body || {};
 
-    // 移除括號動作描寫
-    let cleanText = text
-      .replace(/\([^)]*\)/g, '')
-      .replace(/（[^）]*）/g, '')
-      .trim();
-
-    if (!cleanText) return res.status(204).end();
-
-    // 跳脫 XML 字元
-    cleanText = cleanText
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // 關鍵優化：將「……」或「…」轉換為自然停頓標籤，避免語音引擎生硬重讀
-    cleanText = cleanText.replace(/…+/g, '<break time="420ms"/>');
-
-    const rate = trustScore < 40 ? '-8%' : trustScore < 70 ? '-4%' : '0%';
-    const pitch = trustScore < 40 ? '+1%' : '0%';
-
-    // 改用更溫柔自然的香港女聲 zh-HK-HiuMaanNeural（曉曼）
-    const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-HK"><voice name="zh-HK-HiuMaanNeural"><prosody rate="${rate}" pitch="${pitch}">${cleanText}</prosody></voice></speak>`;
-
-    const ttsUrl = `https://${speechRegion}.tts.speech.microsoft.com/cognitiveservices/v1`;
-    const response = await fetch(ttsUrl, {
-      method: 'POST',
-      headers: {
-        'Ocp-Apim-Subscription-Key': speechKey,
-        'Content-Type': 'application/ssml+xml',
-        'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
-        'User-Agent': 'FamilyNVCSimulator',
-      },
-      body: ssml,
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return res.status(response.status).json({ error: errText });
+    if (!text) {
+      return res.status(400).json({ error: '缺少要朗讀的文字' });
     }
 
-    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    // 過濾括號內的動作描寫，例如 (小聲，顫抖) 或 （眼泛淚光），只保留廣東話對白
+    const cleanText = text
+      .replace(/\([^)]*\)/g, '')
+      .replace(/（[^）]*）/g, '')
+      .replace(/\[[^\]]*\]/g, '')
+      .trim();
+
+    if (!cleanText) {
+      return res.status(204).end();
+    }
+
+    // 確保 emotion 為 MiniMax 支援的有效值
+    const validEmotions = ['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'calm'];
+    const finalEmotion = validEmotions.includes(emotion) ? emotion : 'sad';
+
+    // 呼叫 MiniMax T2A v2 語音合成接口（國際版為 api.minimax.io，國內版請改為 api.minimaxi.com）
+    const response = await fetch('https://api.minimax.io/v1/t2a_v2', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey.trim()}`
+      },
+      body: JSON.stringify({
+        model: 'speech-02-hd',
+        text: cleanText,
+        stream: false,
+        language_boost: 'Chinese,Yue', // 強制鎖定香港粵語口音與語氣助詞演繹
+        voice_setting: {
+          voice_id: voiceId,
+          speed: 0.95,
+          vol: 1.0,
+          pitch: 0,
+          emotion: finalEmotion
+        },
+        audio_setting: {
+          sample_rate: 32000,
+          bitrate: 128000,
+          format: 'mp3',
+          channel: 1
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || (data.base_resp && data.base_resp.status_code !== 0)) {
+      const errMsg = data.base_resp?.status_msg || JSON.stringify(data);
+      return res.status(500).json({ error: `MiniMax TTS 錯誤: ${errMsg}` });
+    }
+
+    // MiniMax 回傳的音訊為 Hex 編碼字串，轉換為 MP3 二進位串流回傳給前端播放
+    const hexAudio = data.data?.audio;
+    if (!hexAudio) {
+      return res.status(500).json({ error: 'MiniMax 未回傳音訊資料' });
+    }
+
+    const audioBuffer = Buffer.from(hexAudio, 'hex');
     res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Length', audioBuffer.length);
     return res.status(200).send(audioBuffer);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error('MiniMax TTS Error:', error);
+    return res.status(500).json({ error: `語音合成連線失敗: ${error.message}` });
   }
 }
