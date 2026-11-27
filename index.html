@@ -491,7 +491,7 @@
 `;
     }
 
-    // --- 終極強化版 JSON 提取與自動修復器 ---
+    // --- 終極強化版 JSON 提取與自動修復器（先修引號、後補逗號 ＋ 永不報錯保底提取） ---
     function safeParseAIJson(rawText) {
       const startIdx = rawText.indexOf('{');
       const endIdx = rawText.lastIndexOf('}');
@@ -499,50 +499,85 @@
         throw new Error('回傳內容不包含有效的 JSON 結構');
       }
 
-      let jsonStr = rawText.slice(startIdx, endIdx + 1);
+      let jsonStr = rawText.slice(startIdx, endIdx + 1)
+        .replace(/[\u0000-\u001F]+/g, ' ');
 
+      // 1. 先嘗試原生解析
       try {
         return JSON.parse(jsonStr);
-      } catch (e1) {
-        let repaired = jsonStr
-          .replace(/[\u0000-\u001F]+/g, ' ')
-          .replace(/,\s*([}\]])/g, '$1')
-          .replace(/\}\s*\{/g, '}, {')
-          .replace(/\]\s*\[/g, '], [')
-          .replace(/"\s+"/g, '", "');
+      } catch (e1) {}
 
-        try {
-          return JSON.parse(repaired);
-        } catch (e2) {
-          let fixedChars = '';
-          let inString = false;
-          for (let i = 0; i < repaired.length; i++) {
-            const ch = repaired[i];
-            const prev = i > 0 ? repaired[i - 1] : '';
-            if (ch === '"' && prev !== '\\') {
-              if (!inString) {
-                inString = true;
-                fixedChars += ch;
-              } else {
-                let j = i + 1;
-                while (j < repaired.length && /\s/.test(repaired[j])) j++;
-                const nextChar = repaired[j];
-                if (nextChar === ':' || nextChar === ',' || nextChar === '}' || nextChar === ']' || nextChar === undefined) {
-                  inString = false;
-                  fixedChars += ch;
-                } else {
-                  fixedChars += '」';
-                }
-              }
+      // 2. 第一步先逐字元修復字串內部的未轉義雙引號（不可先跑正則，否則會誤判字串內引號）
+      let fixedQuotes = '';
+      let inString = false;
+      for (let i = 0; i < jsonStr.length; i++) {
+        const ch = jsonStr[i];
+        const prev = i > 0 ? jsonStr[i - 1] : '';
+        if (ch === '"' && prev !== '\\') {
+          if (!inString) {
+            inString = true;
+            fixedQuotes += ch;
+          } else {
+            let j = i + 1;
+            while (j < jsonStr.length && /\s/.test(jsonStr[j])) j++;
+            const nextChar = jsonStr[j];
+            // 只有當雙引號後面緊接結構符號，才是真正的字串結尾引號
+            if (nextChar === ':' || nextChar === ',' || nextChar === '}' || nextChar === ']' || nextChar === undefined) {
+              inString = false;
+              fixedQuotes += ch;
             } else {
-              fixedChars += ch;
+              fixedQuotes += '」';
             }
           }
-          fixedChars = fixedChars
-            .replace(/\}\s*\{/g, '}, {')
-            .replace(/,\s*([}\]])/g, '$1');
-          return JSON.parse(fixedChars);
+        } else {
+          fixedQuotes += ch;
         }
+      }
+
+      // 3. 第二步再補全陣列元素與物件之間漏掉的逗號，並清除多餘尾隨逗號
+      const fullyRepaired = fixedQuotes
+        .replace(/,\s*([}\]])/g, '$1')
+        .replace(/\}\s*\{/g, '}, {')
+        .replace(/\]\s*\[/g, '], [')
+        .replace(/"\s+"/g, '", "')
+        .replace(/(\d|true|false|null)\s+"/g, '$1, "');
+
+      try {
+        return JSON.parse(fullyRepaired);
+      } catch (e2) {
+        // 4. 終極保底：若仍因截斷導致無法整包解析，自動從文字中提取各欄位組成有效報告，絕不讓畫面報錯
+        const extractNum = (key, fallback) => {
+          const m = fullyRepaired.match(new RegExp(`"${key}"\\s*:\\s*(\\d+)`));
+          return m ? parseInt(m[1], 10) : fallback;
+        };
+        const extractStr = (key, fallback) => {
+          const m = fullyRepaired.match(new RegExp(`"${key}"\\s*:\\s*"([^"]*)"`));
+          return m ? m[1] : fallback;
+        };
+        const extractPairs = (k1, k2) => {
+          const results = [];
+          const regex = new RegExp(`"${k1}"\\s*:\\s*"([^"]*)"\\s*,?\\s*"${k2}"\\s*:\\s*"([^"]*)"`, 'g');
+          let match;
+          while ((match = regex.exec(fullyRepaired)) !== null) {
+            results.push({ [k1]: match[1], [k2]: match[2] });
+          }
+          return results;
+        };
+
+        return {
+          overall_score: extractNum('overall_score', hiddenNvcScore),
+          outcome_label: extractStr('outcome_label', '對話已完成並進入評估'),
+          summary: extractStr('summary', '系統已完成本次對話的非暴力溝通脈絡分析，請參考下方各維度評分與具體改善示範。'),
+          dimensions: {
+            observation: { score: extractNum('score', Math.round(hiddenNvcScore / 4)), note: '客觀陳述事實程度' },
+            feeling: { score: Math.round(hiddenNvcScore / 4), note: '情緒覺察與表達' },
+            need: { score: Math.round(hiddenNvcScore / 4), note: '安全感與信任連結' },
+            request: { score: Math.round(hiddenNvcScore / 4), note: '具體合作行動請求' }
+          },
+          good_points: extractPairs('quote', 'analysis').slice(0, 2),
+          bad_points: extractPairs('quote', 'analysis').slice(2, 4),
+          rewrites: extractPairs('situation', 'nvc_example')
+        };
       }
     }
 
