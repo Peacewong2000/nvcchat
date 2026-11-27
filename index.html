@@ -320,6 +320,9 @@
     let conversationHistory = [];
     let turnCount = 1;
     const MAX_TURNS = 12;               // 嚴格限制 12 輪內完成對話
+    let hiddenNvcScore = 30;            // 系統幕後隱藏的實時 NVC 分數 (0-100)
+    let isWaitingForAI = false;
+
     // --- 角色聲線配置（已整合你的 5 組專屬復刻情緒音軌） ---
     const WIFE_VOICE_MAP = {
       calm: 'moss_audio_18837cbe-ea94-11f1-9c05-5e85d72bfa83',    // 平靜、釋懷女聲
@@ -715,14 +718,24 @@
     }
 
     async function startHandsFreeCall() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showCustomModal('此瀏覽器或網址不支援麥克風功能。請確認網址為 https:// 開頭，並使用 Chrome 或 Safari 瀏覽器開啟。');
+        return;
+      }
+
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
+        // 先嘗試開啟降噪與回音消除；若部分手機不支援，自動降級為基礎麥克風請求
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            }
+          });
+        } catch (constraintErr) {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
 
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioCtx();
@@ -795,8 +808,40 @@
           updateVoiceUIState('listening');
         }
       } catch (err) {
-        alert('無法開啟麥克風！請確認瀏覽器已允許使用麥克風權限。(' + err.message + ')');
+        let friendlyReason = err.message || err.name;
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          friendlyReason = '麥克風權限被拒絕。請點擊瀏覽器網址列左側的「鎖頭／設定圖示」→ 開啟「麥克風」權限，然後重新整理頁面。（若你是從 WhatsApp / 微信內直接點開連結，請改用 Chrome 或 Safari 開啟）';
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          friendlyReason = '找不到可用的麥克風裝置，請確認手機或電腦已連接麥克風。';
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          friendlyReason = '麥克風目前正被其他 App（如電話、錄音機或其他網頁）佔用中，請先關閉其他程式再試。';
+        }
+        showCustomModal('無法開啟麥克風：' + friendlyReason);
       }
+    }
+
+    // 自訂友善提示視窗（取代原生 alert）
+    function showCustomModal(msg) {
+      let modal = document.getElementById('custom-alert-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'custom-alert-modal';
+        modal.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+          <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-stone-200 animate-fade-in">
+            <div class="font-bold text-stone-800 text-base mb-2 flex items-center gap-2">
+              <span class="text-amber-600">⚠️</span> 提示訊息
+            </div>
+            <p id="custom-alert-text" class="text-sm text-stone-600 leading-relaxed mb-5"></p>
+            <button onclick="document.getElementById('custom-alert-modal').classList.add('hidden')" class="w-full bg-amber-700 hover:bg-amber-800 text-white font-semibold py-2.5 rounded-xl text-sm transition">
+              我知道了
+            </button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      }
+      document.getElementById('custom-alert-text').textContent = msg;
+      modal.classList.remove('hidden');
     }
 
     function stopHandsFreeCall() {
