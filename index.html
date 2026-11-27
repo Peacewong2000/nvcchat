@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>家庭理財非暴力溝通 (NVC) 互動練習器 - 真人情感語音版</title>
+  <title>家庭理財非暴力溝通 (NVC) 互動練習器 - 雙角色情感語音版</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -52,9 +52,9 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button id="toggle-tts-btn" onclick="toggleAutoTTS()" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg font-medium transition border border-amber-200 flex items-center gap-1.5" title="切換 AI 妻子自動廣東話朗讀">
+        <button id="toggle-tts-btn" onclick="toggleAutoTTS()" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg font-medium transition border border-amber-200 flex items-center gap-1.5" title="切換對方自動廣東話朗讀">
           <span id="tts-icon">🔊</span>
-          <span id="tts-label" class="hidden sm:inline">粵語女聲：開</span>
+          <span id="tts-label" class="hidden sm:inline">粵語語音：開</span>
         </button>
 
         <button id="reset-btn" onclick="resetApp()" class="hidden text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-1.5 rounded-lg font-medium transition">
@@ -67,49 +67,54 @@
   <!-- 主內容容器 -->
   <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col">
 
-    <!-- 1. 情境介紹與開始畫面 -->
+    <!-- 1. 情境介紹與角色選擇畫面 -->
     <section id="intro-screen" class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 sm:p-8 my-auto animate-fade-in">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold mb-4">
         <span>試用情境一</span>
         <span>·</span>
-        <span>高回報養老投資騙局</span>
+        <span>高回報養老投資騙局（限時 12 輪對話）</span>
       </div>
       
       <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 mb-3">
-        當發現年邁的另一半誤信騙局，失去近半退休積蓄……
+        妻子誤信騙局痛失 50 萬退休積蓄，如何向另一半開啟艱難對話？
       </h2>
       <p class="text-stone-600 leading-relaxed mb-6">
-        在這個模擬練習中，你將扮演<strong>年近退休的丈夫</strong>角色。你年約六十歲的妻子剛剛發現自己誤信熟人介紹的「10厘高回報養老投資」騙局，痛失了兩人半生辛苦儲下的 <strong>50 萬退休積蓄</strong>。她此刻極度恐慌、內疚，正吞吞吐吐地想向你坦白。
+        年約六十歲的妻子因心疼丈夫辛苦，誤信老街坊介紹的「10厘高回報養老投資」騙局，痛失了老兩口近半退休積蓄 <strong>50 萬元</strong>。你可以選擇扮演<strong>丈夫</strong>或<strong>妻子</strong>，在 <strong>12 輪對話內</strong>運用非暴力溝通處理這場家庭理財危機：
       </p>
 
+      <!-- 角色選擇卡片 -->
       <div class="grid sm:grid-cols-2 gap-4 mb-6">
-        <div class="bg-stone-50 rounded-xl p-4 border border-stone-200/80">
-          <h3 class="font-bold text-stone-800 text-sm mb-2 flex items-center gap-1.5">
-            <span class="text-amber-600">🎯</span> 你的溝通目標
-          </h3>
-          <ul class="text-sm text-stone-600 space-y-1.5">
-            <li>• 覺察並安頓自己的震驚與憤怒（先處理情緒）</li>
-            <li>• 營造安全感，讓妻子願意說出整件事的經過</li>
-            <li>• 理解她背後的善意動機（想幫輕你、為養老打算）</li>
-            <li>• 表達你的擔憂與需要，達成<strong>報警與未來理財共識</strong></li>
-          </ul>
+        <div id="role-card-husband" onclick="selectRole('husband')" class="cursor-pointer rounded-2xl p-5 border-2 border-amber-600 bg-amber-50/50 transition relative">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-base font-bold text-stone-800">👨 扮演【丈夫】（傾聽與回應方）</span>
+            <span id="badge-husband" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-700 text-white">已選擇</span>
+          </div>
+          <p class="text-xs text-stone-600 leading-relaxed mb-2">
+            妻子正吞吞吐吐想向你坦白被騙去 50 萬。你的目標是<strong>安頓震驚與憤怒、理解她想幫輕你的初衷</strong>，共同商討報警與日後理財共識。
+          </p>
+          <div class="text-[11px] text-amber-800 font-medium">🎙️ 開場：由 AI 妻子先吞吞吐吐開口</div>
         </div>
 
-        <div class="bg-amber-50/60 rounded-xl p-4 border border-amber-200/70">
-          <h3 class="font-bold text-amber-900 text-sm mb-2 flex items-center gap-1.5">
-            <span>🎙️</span> 真人廣東話語音對談模式
-          </h3>
-          <div class="text-xs text-amber-900/90 space-y-1.5 leading-relaxed">
-            <p>• <strong>跨裝置穩定廣東話收音</strong>：支援所有手機與電腦瀏覽器，<strong>講完停頓 1.3 秒自動發送</strong>。</p>
-            <p>• <strong>防吞字前置緩衝</strong>：自動保留開口前 0.35 秒音訊，不會漏掉開頭第一個字。</p>
-            <p>• 亦隨時支援文字輸入或動作輔助按鈕。</p>
+        <div id="role-card-wife" onclick="selectRole('wife')" class="cursor-pointer rounded-2xl p-5 border-2 border-stone-200 bg-white hover:border-amber-400 transition relative">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-base font-bold text-stone-800">👩 扮演【妻子】（坦白與溝通方）</span>
+            <span id="badge-wife" class="hidden text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-700 text-white">已選擇</span>
           </div>
+          <p class="text-xs text-stone-600 leading-relaxed mb-2">
+            你就是誤信騙局痛失 50 萬的妻子。丈夫見你神色不安先開口問你，你要學習<strong>如何不逃避、不找藉口防衛，坦誠向丈夫交代並同理他的震驚</strong>。
+          </p>
+          <div class="text-[11px] text-stone-500 font-medium">🎙️ 開場：由 AI 丈夫先問「係咪有嘢想同我講呀？」</div>
         </div>
+      </div>
+
+      <div class="bg-stone-50 rounded-xl p-4 border border-stone-200/80 mb-6 text-xs text-stone-600 space-y-1.5">
+        <p>• <strong>幕後 NVC 實時評分聯動</strong>：系統會在幕後根據你的非暴力溝通表現實時加減分；分數越低（越指責、防衛或隱瞞），對方的情緒與回應就越負面。</p>
+        <p>• <strong>12 輪實戰限制</strong>：對話必須在 <strong>12 輪內</strong>完成，到達第 12 輪時系統將自動結束並生成 NVC 評估報告。</p>
       </div>
 
       <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-stone-100">
         <p class="text-xs text-stone-500">
-          對話達成共識（或進行約 8–10 輪後）將自動進入 <strong>NVC 深度分析報告</strong>。
+          建議在室內使用「真人語音通話」進行最貼近真實的口語練習。
         </p>
         <div class="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
           <button onclick="startSimulation(false)" class="w-full sm:w-auto bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold px-5 py-3 rounded-xl transition cursor-pointer text-sm">
@@ -151,26 +156,20 @@
         </div>
       </div>
 
-      <!-- 狀態列 -->
+      <!-- 精簡狀態列 -->
       <div class="bg-stone-50 border-b border-stone-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-            <span class="font-semibold text-sm text-stone-800">妻子（對話中）</span>
+            <span id="partner-role-label" class="font-semibold text-sm text-stone-800">妻子（對話中）</span>
           </div>
           <span class="text-stone-300">|</span>
-          <span id="turn-counter" class="text-xs text-stone-500 font-medium">第 1 輪對話</span>
+          <span id="turn-counter" class="text-xs text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full font-semibold">第 1 / 12 輪</span>
         </div>
 
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2" title="反映妻子目前是否感到安全、願意坦白">
-            <span class="text-xs text-stone-500">妻子安全感：</span>
-            <div class="w-20 sm:w-24 h-2 bg-stone-200 rounded-full overflow-hidden">
-              <div id="trust-bar" class="h-full bg-amber-500 transition-all duration-500" style="width: 25%"></div>
-            </div>
-          </div>
+        <div class="flex items-center gap-2">
           <button onclick="forceEndConversation()" class="text-xs bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 px-3 py-1 rounded-lg font-medium transition">
-            結束對話並查看分析
+            提前結束並查看分析
           </button>
         </div>
       </div>
@@ -185,16 +184,16 @@
           <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></span>
           <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></span>
         </span>
-        <span id="typing-text">妻子正低頭猶豫着……</span>
+        <span id="typing-text">對方正在思考點樣回應……</span>
       </div>
 
       <!-- 輔助非暴力動作快捷鍵 -->
-      <div class="bg-stone-50 px-4 pt-2.5 pb-1.5 border-t border-stone-200/80 flex items-center gap-2 overflow-x-auto">
+      <div id="action-shortcuts" class="bg-stone-50 px-4 pt-2.5 pb-1.5 border-t border-stone-200/80 flex items-center gap-2 overflow-x-auto">
         <span class="text-xs text-stone-400 shrink-0">加入動作：</span>
         <button onclick="insertAction('（深呼吸一下，語氣平靜）')" class="shrink-0 text-xs bg-white hover:bg-amber-50 text-stone-600 hover:text-amber-800 border border-stone-200 px-2.5 py-1 rounded-full transition">
           😮‍💨 深呼吸調整情緒
         </button>
-        <button onclick="insertAction('（輕拍妻子手背，眼神體諒）')" class="shrink-0 text-xs bg-white hover:bg-amber-50 text-stone-600 hover:text-amber-800 border border-stone-200 px-2.5 py-1 rounded-full transition">
+        <button onclick="insertAction('（輕拍對方手背，眼神體諒）')" class="shrink-0 text-xs bg-white hover:bg-amber-50 text-stone-600 hover:text-amber-800 border border-stone-200 px-2.5 py-1 rounded-full transition">
           🤝 輕拍手背安撫
         </button>
         <button onclick="insertAction('（沉默十秒，讓自己冷靜下來）')" class="shrink-0 text-xs bg-white hover:bg-amber-50 text-stone-600 hover:text-amber-800 border border-stone-200 px-2.5 py-1 rounded-full transition">
@@ -237,7 +236,7 @@
       <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 sm:p-8">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-100">
           <div>
-            <span class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md">非暴力溝通 (NVC) 評估報告</span>
+            <span id="report-role-tag" class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md">非暴力溝通 (NVC) 評估報告</span>
             <h2 class="text-2xl font-bold text-stone-800 mt-2">你的家庭理財溝通表現分析</h2>
             <p id="report-outcome-badge" class="text-sm text-stone-500 mt-1"></p>
           </div>
@@ -290,7 +289,7 @@
         <div class="bg-white rounded-2xl border border-rose-200 shadow-sm p-6">
           <h3 class="font-bold text-rose-900 text-base mb-4 flex items-center gap-2">
             <span class="w-6 h-6 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-sm">!</span>
-            講得不好的內容（容易引發防衛或羞辱）
+            講得不好的內容（容易引發防衛或對立）
           </h3>
           <div id="bad-points-list" class="space-y-4"></div>
         </div>
@@ -307,18 +306,13 @@
           <summary class="font-semibold text-sm text-amber-900 cursor-pointer select-none">
             📖 點擊查看本情境「非暴力溝通標準劇本」重點金句參考
           </summary>
-          <div class="mt-3 pt-3 border-t border-amber-200/60 text-xs sm:text-sm text-stone-700 space-y-2.5 leading-relaxed">
-            <p><strong>1. 先調息再回應（避免情緒爆發）：</strong><br>「（沉默一陣，用呼吸調息約10秒）老婆，我一聽到你俾人呃咗50萬，我的確好震驚、好肉痛。呢筆真係唔係小數目，夠我哋用足三、四年。」</p>
-            <p><strong>2. 肯定背後善意（區分行為與動機）：</strong><br>「原來你係心疼我辛苦……多謝你嘅心意。」</p>
-            <p><strong>3. 坦誠表達脆弱與需要（而非辱罵「蠢/貪心」）：</strong><br>「我而家除咗因為筆錢無咗而覺得徬徨，我都有啲傷心，好似我哋之間的信任變得淺薄咗。用咁大筆錢之前，我哋無得傾下先，我都覺得無咗安全感。」</p>
-            <p><strong>4. 提出具體且可執行的請求（共同面對）：</strong><br>「我哋一齊去差館報警先，好無？同埋之後如果我哋要駛錢多過一萬蚊，我哋都攞出嚟商量下先，一齊決定，好唔好？只要我哋兩個人一齊承擔，錢可以再儲過。」</p>
-          </div>
+          <div id="script-reference-box" class="mt-3 pt-3 border-t border-amber-200/60 text-xs sm:text-sm text-stone-700 space-y-2.5 leading-relaxed"></div>
         </details>
       </div>
 
       <div class="flex justify-center pt-2">
         <button onclick="resetApp()" class="bg-amber-700 hover:bg-amber-800 text-white font-semibold px-8 py-3 rounded-xl shadow-sm transition">
-          再練習一次（嘗試不同溝通方式）
+          再練習一次（可切換角色或嘗試不同溝通方式）
         </button>
       </div>
     </section>
@@ -327,22 +321,25 @@
 
   <script>
     // --- 狀態變數 ---
+    let selectedUserRole = 'husband'; // 'husband' 或 'wife'
     let conversationHistory = [];
     let turnCount = 1;
-    let currentTrustScore = 25;
+    const MAX_TURNS = 12;               // 嚴格限制 12 輪內完成對話
+    let hiddenNvcScore = 30;            // 系統幕後隱藏的實時 NVC 分數 (0-100)
     let isWaitingForAI = false;
 
     // --- 角色聲線配置 ---
-    const CURRENT_VOICE_ID = 'moss_audio_7b1027a9-e9bd-11f1-9c05-5e85d72bfa83';
+    const WIFE_CLONED_VOICE_ID = 'moss_audio_7b1027a9-e9bd-11f1-9c05-5e85d72bfa83'; // 復刻老婦人粵語聲線
+    const HUSBAND_VOICE_ID = 'Cantonese_Gentleman'; // AI 丈夫使用的沉穩粵語男聲
 
     // --- 語音通話與音訊狀態 ---
     let autoTTSEnabled = true;
     let isHandsFreeActive = false;
     let isMicPaused = false;
-    let isWifeSpeaking = false;
+    let isPartnerSpeaking = false;
     let currentAudio = null;
 
-    // 穩定跨裝置 Web Audio API 錄音與 VAD 變數（含 0.35 秒前置緩衝防吞字）
+    // Web Audio API 錄音與 VAD 變數（含 0.35 秒前置緩衝防吞字）
     let audioContext = null;
     let mediaStream = null;
     let scriptProcessor = null;
@@ -354,48 +351,107 @@
     const SILENCE_THRESHOLD = 0.006;
     const SILENCE_DURATION_MS = 1300;
 
-    // --- 劇本與系統提示詞 ---
-    const WIFE_SYSTEM_PROMPT = `
+    // --- 角色切換邏輯 ---
+    function selectRole(role) {
+      selectedUserRole = role;
+      const cardH = document.getElementById('role-card-husband');
+      const cardW = document.getElementById('role-card-wife');
+      const badgeH = document.getElementById('badge-husband');
+      const badgeW = document.getElementById('badge-wife');
+
+      if (role === 'husband') {
+        cardH.className = 'cursor-pointer rounded-2xl p-5 border-2 border-amber-600 bg-amber-50/50 transition relative';
+        badgeH.classList.remove('hidden');
+        cardW.className = 'cursor-pointer rounded-2xl p-5 border-2 border-stone-200 bg-white hover:border-amber-400 transition relative';
+        badgeW.classList.add('hidden');
+      } else {
+        cardW.className = 'cursor-pointer rounded-2xl p-5 border-2 border-amber-600 bg-amber-50/50 transition relative';
+        badgeW.classList.remove('hidden');
+        cardH.className = 'cursor-pointer rounded-2xl p-5 border-2 border-stone-200 bg-white hover:border-amber-400 transition relative';
+        badgeH.classList.add('hidden');
+      }
+    }
+
+    // --- 動態生成對應角色的 AI 系統提示詞（將隱藏 NVC 分數直接掛鉤對方反應） ---
+    function buildDynamicSystemPrompt() {
+      if (selectedUserRole === 'husband') {
+        return `
 你現在正在進行一個「家庭理財非暴力溝通 (NVC)」教育模擬。
 你扮演【年約六十歲的妻子】，玩家扮演【年近退休的丈夫】。
+目前系統幕後的【非暴力溝通實時分數】為：${hiddenNvcScore} / 100 分（初始 30 分）。
 
-【背景設定】
-- 你今年六十歲左右，與丈夫結婚三十多年，兩人原本正準備過安穩的退休生活。
-- 你誤信老街坊「阿陳太」介紹的「10厘高回報養老投資」騙局，把家裡半生積攢準備養老用的積蓄「50萬」投了進去（最初確實賺過一兩萬，所以才信以為真），結果現在血本無歸，失去兩人近半退休積蓄。
-- 50萬夠你們老兩口用足三、四年，你平時去街市買棵菜都計過度過，這次動用50萬完全沒有事前跟丈夫商量。
-- 你的真實初衷：並不是貪心，而是見丈夫年紀大仍日日死慳死抵、做嘢辛苦，心疼他，想幫輕他一點，讓老兩口將來養老過得舒服些。
-- 你還未報警，因為被騙後極度恐慌，第一時間想先跟丈夫坦白。
+【核心劇情事實】
+- 你（妻子）誤信老街坊「阿陳太」介紹的「10厘高回報養老投資」騙局，瞞著丈夫把家裡半生積攢的「50萬」養老積蓄投了進去（最初確實賺過一兩萬，所以信以為真），結果血本無歸。
+- 50萬夠你們老兩口用三、四年，你平時買棵菜都計過度過，初衷是見丈夫年紀大仍日日死慳死抵、做嘢辛苦，心疼他，想幫輕他。你還未報警。
 
-【你的性格與反應規則（核心機制）】
-1. **全程使用道地香港年長婦女的廣東話口語**（例如：唔好意思、俾人呃咗、幫輕下、死慳死抵、老兩口、養老金、差館），並在句首用括號描寫你的神態與語氣，例如：（小聲，低頭搓着雙手，聲線顫抖）、（眼泛淚光，哽咽）、（感到安全咗少少，輕輕點頭）。
-2. **緊扣非暴力溝通的真實人性反應**：
-   - **如果丈夫（玩家）語氣粗暴、指責、辱罵**（如罵你蠢、老糊塗、無知婦孺、貪心、問你當佢死㗎）：你會變得極度害怕、退縮、哭泣、結巴，或者委屈防衛（例如：「我…我唔係貪心呀！我見你年紀大仲咁辛苦，我只係想幫輕下你…」），安全感大幅下降，不敢說出細節。
-   - **如果丈夫能先調息冷靜、語氣溫和、表達理解你的出發點、或坦誠分享他的震驚/傷心/缺乏安全感（而不人身攻擊）**：你會漸漸感到安全，放下防衛，流淚坦白整件事的經過（陳太介紹10厘息、最初賺萬幾蚊、心疼丈夫辛苦），並真誠道歉。
-3. **簡潔自然節奏（每次回覆控制在 40–75 字以內）**：
-   - 開場吞吞吐吐說有事想講；丈夫追問時才戰戰兢兢承認「唔見咗錢」->「俾人呃咗50萬」->「陳太10厘息與想幫輕丈夫」->「未報警」。
-4. **結束條件判斷**：
-   - 當雙方達成共識（決定一齊去報警、約定日後大額支出先商量）、或衝突破裂達 5 輪以上、或對話超過 10 輪時，將 \`should_end\` 設為 \`true\`。
+【核心機制：你的反應必須嚴格受「非暴力溝通實時分數」主導】
+1. **每次評估丈夫（玩家）剛才那句話的 NVC 質素，在回傳 JSON 時更新 \`nvc_score\`（0–100 整數）**：
+   - 若玩家使用指責、辱罵、嘲諷、逼問或翻舊帳（如罵你蠢、老糊塗、貪心、問你當佢死㗎）：\`nvc_score\` **大幅下降 10 至 20 分**。
+   - 若玩家語氣平淡、僅追問細節但無情感同理：\`nvc_score\` 維持不變或微調 ±3 分。
+   - 若玩家展現情緒覺察（先調息冷靜）、表達脆弱感受（震驚、心痛、無安全感而非咆哮）、肯定你的善意初衷、或提出合作請求：\`nvc_score\` **上升 10 至 18 分**。
+2. **根據分數高低決定你的負面或正面反應**：
+   - **當分數 < 35 分（低分／暴力溝通狀態）**：你會出現明顯負面反應——極度恐慌縮成一團、崩潰哭泣結巴，或者委屈激動反駁（「你咁大聲鬧我有咩用啫！我唔係貪心，我見你日日做到隻積咁先想幫輕下你！」），甚至拒絕再講細節。
+   - **當分數 35–65 分（中分／試探狀態）**：你依然內疚不安、吞吞吐吐，逐少交代經過（唔見咗錢 -> 俾人呃50萬 -> 陳太10厘息 -> 未報警）。
+   - **當分數 > 65 分（高分／安全同理狀態）**：你感受到丈夫的愛與承擔，漸漸平靜釋懷，流淚真誠道歉，並願意一齊去差館報警及約定日後大額支出先商量。
+3. **全程使用道地香港年長婦女的廣東話口語**，句首用括號描寫神態，每次回覆控制在 40–75 字以內。
 
 【輸出格式要求】
-你必須只回傳合法 JSON 格式，字串內部切勿使用英文雙引號 "（如需引號請用中文「」），結構如下：
+只回傳合法 JSON，字串內部切勿使用英文雙引號 "（引號請用中文「」）：
 {
   "reply": "（神態描寫）你的廣東話回應內容",
-  "emotion": "只能從以下選一個：fearful（害怕吞吐）、sad（內疚委屈哭泣）、angry（激動防衛）、calm（漸感安全釋懷）",
-  "trust_score": 0到100之間的整數,
+  "emotion": "只能選一個：fearful（害怕吞吐）、sad（內疚委屈哭泣）、angry（激動防衛）、calm（漸感安全釋懷）",
+  "nvc_score": 0到100之間的整數,
   "should_end": true 或 false,
-  "end_reason": "若 should_end 為 true，簡述結束原因，否則留空字串"
+  "end_reason": "若雙方達成共識或徹底決裂則設為 true 並簡述原因，否則留空字串"
 }
 `;
+      } else {
+        return `
+你現在正在進行一個「家庭理財非暴力溝通 (NVC)」教育模擬。
+你扮演【年近退休的丈夫】，玩家扮演【年約六十歲的妻子】。
+目前系統幕後的【非暴力溝通實時分數】為：${hiddenNvcScore} / 100 分（初始 30 分）。
 
-    const ANALYZER_SYSTEM_PROMPT = `
+【核心劇情事實】
+- 你（丈夫）做嘢辛苦半生、日日死慳死抵，只希望同結婚三十多年的妻子安穩養老。
+- **被騙錢的是妻子（玩家）**：妻子剛剛神色慌張，你剛問了她「係咪有嘢想同我講呀？」。隨著對話推進，她會向你坦白自己瞞著你把兩人半生積蓄「50萬」投進老街坊陳太介紹的「10厘養老投資」騙局並血本無歸。
+
+【核心機制：你的反應必須嚴格受「非暴力溝通實時分數」主導】
+1. **每次評估妻子（玩家）剛才那句話的 NVC 質素，在回傳 JSON 時更新 \`nvc_score\`（0–100 整數）**：
+   - 若妻子（玩家）吞吞吐吐隱瞞、找藉口推卸責任（例如「都係陳太害我」、「你平時又唔理錢」）、或激動頂嘴防衛：\`nvc_score\` **大幅下降 10 至 20 分**。
+   - 若妻子（玩家）能坦誠陳述事實（承認無商量就動用50萬被騙）、真誠表達自己的內疚與害怕、同時同理你的震驚、心痛與對退休安全感的需要，並主動提出一齊報警及日後商量：\`nvc_score\` **上升 10 至 18 分**。
+2. **根據分數高低決定你的負面或正面反應**：
+   - **當分數 < 35 分（低分／觸發防衛或對立）**：你會因為突然得知50萬無咗（或見她隱瞞推卸）而極度震驚、憤怒失控、激動質問（「50萬呀！成副身家無咗一半，你竟然一聲都唔同我商量？！」），語氣充滿指責與失望。
+   - **當分數 35–65 分（中分／震驚消化中）**：你感到好肉痛、好徬徨，覺得夫妻之間的信任受到動搖，語氣沉重地追問經過（邊個介紹、點解唔商量、報咗警未）。
+   - **當分數 > 65 分（高分／感受被理解與連結）**：雖然依然心痛筆錢，但因為感受到妻子的真誠悔意與心疼你的初衷，你願意深呼吸冷靜下來，原諒她並答應一齊去報警共同承擔。
+3. **全程使用道地香港年長男性的廣東話口語**，句首用括號描寫神態，每次回覆控制在 40–75 字以內。
+
+【輸出格式要求】
+只回傳合法 JSON，字串內部切勿使用英文雙引號 "（引號請用中文「」）：
+{
+  "reply": "（神態描寫）你的廣東話回應內容",
+  "emotion": "只能選一個：fearful（震驚徬徨）、sad（心痛失望）、angry（憤怒激動）、calm（冷靜釋懷承擔）",
+  "nvc_score": 0到100之間的整數,
+  "should_end": true 或 false,
+  "end_reason": "若雙方達成共識或徹底決裂則設為 true 並簡述原因，否則留空字串"
+}
+`;
+      }
+    }
+
+    function buildAnalyzerSystemPrompt() {
+      const roleDesc = selectedUserRole === 'husband'
+        ? '玩家扮演【丈夫】（得知妻子誤信養老騙局痛失50萬後的一方）'
+        : '玩家扮演【妻子】（誤信養老騙局痛失50萬後，主動向丈夫坦白並修復信任的一方）';
+
+      return `
 你是一位資深的「非暴力溝通 (NVC, Nonviolent Communication)」家庭治療師與理財溝通導師。
-請根據玩家（扮演丈夫）與 AI（扮演誤信養老投資騙局損失50萬的年長妻子）的完整對話紀錄，按照 Marshall Rosenberg 的非暴力溝通四大核心要素進行評估。
+本次模擬中，${roleDesc}。系統幕後實時追蹤的最終非暴力溝通互動指數為 ${hiddenNvcScore} / 100 分（請將總分維持在 ${hiddenNvcScore} 分左右 ±10 分以內，保持前後一致）。
 
 【非暴力溝通四大評估標準】
-1. **觀察 (Observation)**：是否能客觀陳述事實（如「損失了50萬」、「事前沒有商量」），而非混入人身攻擊或標籤（如「無知婦孺」、「老糊塗」、「蠢」、「貪心」）。
-2. **感受 (Feeling)**：能否覺察並平靜表達自己真實的脆弱情緒（如「震驚」、「肉痛」、「徬徨」、「傷心」、「無咗安全感」），而非用憤怒咆哮掩飾恐懼。
-3. **需要 (Need)**：能否看見自己內在的核心需要（如「退休養老保障」、「被尊重與知情權」、「夫妻信任」），同時同理妻子背後的正向需要（如「想幫輕丈夫」、「希望老兩口生活安穩」）。
-4. **請求 (Request)**：能否提出具體、正向、可執行的合作請求（如「我哋一齊去差館報警好無？」、「之後駛錢多過一萬蚊先商量一齊決定好唔好？」），而非威脅或翻舊帳。
+1. **觀察 (Observation)**：是否客觀陳述事實（如「損失了50萬」、「事前未商量」），而非指責、貼標籤或推卸責任。
+2. **感受 (Feeling)**：能否平靜覺察並表達真實脆弱情緒（如「震驚」、「肉痛」、「內疚」、「害怕」、「傷心」、「無安全感」），而非用憤怒咆哮或逃避掩飾。
+3. **需要 (Need)**：能否看見彼此的核心需要（如「退休安穩保障」、「知情權與尊重」、「夫妻信任」、「想幫輕伴侶的善意」）。
+4. **請求 (Request)**：能否提出具體、正向、可執行的合作請求（如「一齊去差館報警」、「之後大額支出先一齊商量決定」）。
 
 【極度重要 JSON 語法規則】
 1. 必須回傳單一合法 JSON 物件，不要包含 \`\`\`json 標記。
@@ -416,13 +472,13 @@
   "good_points": [
     {
       "quote": "引用玩家講得好的原句（不可含英文雙引號）",
-      "analysis": "具體說明這句話符合哪項 NVC 原則，以及為何能安撫妻子。"
+      "analysis": "具體說明這句話符合哪項 NVC 原則，以及對關係的正面影響。"
     }
   ],
   "bad_points": [
     {
       "quote": "引用玩家講得不好或有待改善的原句（不可含英文雙引號）",
-      "analysis": "具體說明這句話為何會觸發妻子的內疚防衛或阻礙溝通。"
+      "analysis": "具體說明這句話為何會觸發對方的防衛、恐懼或對立。"
     }
   ],
   "rewrites": [
@@ -433,6 +489,7 @@
   ]
 }
 `;
+    }
 
     // --- 終極強化版 JSON 提取與自動修復器 ---
     function safeParseAIJson(rawText) {
@@ -528,7 +585,7 @@
           return {
             reply: contentText,
             emotion: 'sad',
-            trust_score: currentTrustScore,
+            nvc_score: hiddenNvcScore,
             should_end: false
           };
         }
@@ -536,8 +593,8 @@
       }
     }
 
-    // --- MiniMax TTS：播放復刻老婦人香港廣東話語音 ---
-    async function playWifeVoice(text, emotion = 'fearful', voiceId = CURRENT_VOICE_ID) {
+    // --- MiniMax TTS：根據目前 AI 角色自動選用女聲或男聲 ---
+    async function playPartnerVoice(text, emotion = 'fearful') {
       if (!autoTTSEnabled && !isHandsFreeActive) return;
 
       if (currentAudio) {
@@ -545,14 +602,18 @@
         currentAudio = null;
       }
 
-      isWifeSpeaking = true;
+      isPartnerSpeaking = true;
       updateVoiceUIState('speaking');
+
+      const activeVoiceId = selectedUserRole === 'husband'
+        ? WIFE_CLONED_VOICE_ID
+        : HUSBAND_VOICE_ID;
 
       try {
         const response = await fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, emotion, voiceId })
+          body: JSON.stringify({ text, emotion, voiceId: activeVoiceId })
         });
 
         if (!response.ok || response.status === 204) {
@@ -577,7 +638,7 @@
       } catch (err) {
         console.warn('語音播放略過:', err);
       } finally {
-        isWifeSpeaking = false;
+        isPartnerSpeaking = false;
         recordedChunks = [];
         preRollBuffer = [];
         isUserSpeaking = false;
@@ -599,18 +660,18 @@
       const label = document.getElementById('tts-label');
       if (autoTTSEnabled) {
         icon.textContent = '🔊';
-        label.textContent = '粵語女聲：開';
+        label.textContent = '粵語語音：開';
       } else {
         icon.textContent = '🔇';
-        label.textContent = '粵語女聲：關';
+        label.textContent = '粵語語音：關';
         if (currentAudio) {
           currentAudio.pause();
-          isWifeSpeaking = false;
+          isPartnerSpeaking = false;
         }
       }
     }
 
-    // --- 真人免按鍵連續通話控制（統一使用跨裝置穩定的 Web Audio + Azure STT） ---
+    // --- 真人免按鍵連續通話控制 ---
     async function toggleHandsFreeCall() {
       if (isHandsFreeActive) {
         stopHandsFreeCall();
@@ -643,7 +704,7 @@
         silenceStartTime = null;
 
         scriptProcessor.onaudioprocess = (event) => {
-          if (!isHandsFreeActive || isMicPaused || isWifeSpeaking || isWaitingForAI || Date.now() < cooldownUntil) {
+          if (!isHandsFreeActive || isMicPaused || isPartnerSpeaking || isWaitingForAI || Date.now() < cooldownUntil) {
             return;
           }
 
@@ -657,7 +718,6 @@
           if (rms > SILENCE_THRESHOLD) {
             if (!isUserSpeaking) {
               isUserSpeaking = true;
-              // 把開口前約 0.35 秒音訊放進錄音開頭，避免吞掉第一個字
               recordedChunks = [...preRollBuffer];
               preRollBuffer = [];
               updateVoiceUIState('user_speaking');
@@ -676,7 +736,6 @@
               processRecordedSpeech(chunksToProcess, audioContext.sampleRate);
             }
           } else {
-            // 維持最近 4 個音訊區塊（約 0.35 秒）作為開口前置緩衝
             preRollBuffer.push(inputData);
             if (preRollBuffer.length > 4) {
               preRollBuffer.shift();
@@ -691,14 +750,14 @@
         isMicPaused = false;
         autoTTSEnabled = true;
         document.getElementById('tts-icon').textContent = '🔊';
-        document.getElementById('tts-label').textContent = '粵語女聲：開';
+        document.getElementById('tts-label').textContent = '粵語語音：開';
 
         document.getElementById('pause-mic-btn').classList.remove('hidden');
         const toggleBtn = document.getElementById('call-toggle-btn');
         toggleBtn.className = 'text-xs bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 shadow-sm';
         toggleBtn.innerHTML = '<span>📴</span><span>結束語音通話</span>';
 
-        if (!isWifeSpeaking && !isWaitingForAI) {
+        if (!isPartnerSpeaking && !isWaitingForAI) {
           updateVoiceUIState('listening');
         }
       } catch (err) {
@@ -747,7 +806,7 @@
       } else {
         pauseBtn.innerHTML = '⏸️ 暫停收音（深呼吸）';
         pauseBtn.className = 'text-xs bg-stone-700 hover:bg-stone-600 text-amber-200 px-3 py-1.5 rounded-lg font-medium transition border border-stone-600';
-        updateVoiceUIState(isWifeSpeaking ? 'speaking' : 'listening');
+        updateVoiceUIState(isPartnerSpeaking ? 'speaking' : 'listening');
       }
     }
 
@@ -756,6 +815,7 @@
       const indicator = document.getElementById('voice-indicator');
       const title = document.getElementById('voice-status-title');
       const sub = document.getElementById('voice-status-sub');
+      const partnerName = selectedUserRole === 'husband' ? '老婆' : '老公';
 
       indicator.classList.remove('mic-listening', 'bg-emerald-400', 'bg-amber-400', 'bg-rose-400', 'bg-stone-500');
 
@@ -777,8 +837,8 @@
       } else if (state === 'speaking') {
         bar.className = 'bg-amber-900 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-amber-300', 'mic-listening');
-        title.textContent = '🔊 老婆講緊嘢…（已暫停收音防回音）';
-        sub.textContent = '等老婆講完，系統會自動重新開咪俾你接話';
+        title.textContent = `🔊 ${partnerName}講緊嘢…（已暫停收音防回音）`;
+        sub.textContent = `等${partnerName}講完，系統會自動重新開咪俾你接話`;
       } else if (state === 'paused') {
         bar.className = 'bg-stone-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors';
         indicator.classList.add('bg-amber-400');
@@ -892,43 +952,74 @@
       return new Blob([view], { type: 'audio/wav' });
     }
 
-    // --- 開始模擬 ---
+    // --- 開始模擬（依角色設定開場白） ---
     async function startSimulation(enableVoiceCall = false) {
       document.getElementById('intro-screen').classList.add('hidden');
       document.getElementById('chat-screen').classList.remove('hidden');
       document.getElementById('reset-btn').classList.remove('hidden');
 
-      conversationHistory = [
-        { role: 'system', content: WIFE_SYSTEM_PROMPT }
-      ];
       turnCount = 1;
-      currentTrustScore = 25;
-      updateTrustUI(25);
+      hiddenNvcScore = 30;
+      document.getElementById('turn-counter').textContent = `第 1 / ${MAX_TURNS} 輪`;
 
-      const openingLine = "（小聲，低頭搓着雙手，聲線有啲顫抖）嗯… 老公… 我… 我有啲嘢…想同你講呀…";
-      appendMessage('wife', openingLine);
+      const partnerLabel = document.getElementById('partner-role-label');
+      const userInput = document.getElementById('user-input');
+      const scriptRefBox = document.getElementById('script-reference-box');
+
+      let openingLine = '';
+      if (selectedUserRole === 'husband') {
+        partnerLabel.textContent = '妻子（對話中）';
+        userInput.placeholder = '以丈夫身分回應（可直接講廣東話，或在此輸入廣東話對白…）';
+        openingLine = "（小聲，低頭搓着雙手，聲線有啲顫抖）嗯… 老公… 我… 我有啲嘢…想同你講呀…";
+        scriptRefBox.innerHTML = `
+          <p><strong>1. 先調息再回應（避免情緒爆發）：</strong><br>「（沉默一陣，用呼吸調息約10秒）老婆，我一聽到你俾人呃咗50萬，我的確好震驚、好肉痛。呢筆真係唔係小數目，夠我哋用足三、四年。」</p>
+          <p><strong>2. 肯定背後善意（區分行為與動機）：</strong><br>「原來你係心疼我辛苦……多謝你嘅心意。」</p>
+          <p><strong>3. 坦誠表達脆弱與需要（而非辱罵「蠢/貪心」）：</strong><br>「我而家除咗因為筆錢無咗而覺得徬徨，我都有啲傷心，好似我哋之間的信任變得淺薄咗。用咁大筆錢之前，我哋無得傾下先，我都覺得無咗安全感。」</p>
+          <p><strong>4. 提出具體且可執行的請求（共同面對）：</strong><br>「我哋一齊去差館報警先，好無？同埋之後如果我哋要駛錢多過一萬蚊，我哋都攞出嚟商量下先，一齊決定，好唔好？只要我哋兩個人一齊承擔，錢可以再儲過。」</p>
+        `;
+      } else {
+        partnerLabel.textContent = '丈夫（對話中）';
+        userInput.placeholder = '以妻子身分向丈夫坦白（可直接講廣東話，或在此輸入廣東話對白…）';
+        openingLine = "（放下手中的報紙，望住神色慌張的你，溫和咁問）見你成晚坐立不安、想講又唔敢講咁，係咪有嘢想同我講呀？";
+        scriptRefBox.innerHTML = `
+          <p><strong>1. 坦誠陳述事實（不隱瞞、不推卸給陳太）：</strong><br>「（深呼吸，鼓起勇氣看著丈夫）老公，我好對唔住你… 我之前無同你商量，將我哋準備養老嗰 50 萬攞咗去投資，點知遇著騙局，筆錢無晒…」</p>
+          <p><strong>2. 表達真實內疚與初衷（而非防衛反駁）：</strong><br>「我知道呢筆錢係你半生死慳死抵儲返嚟，我而家好驚、好後悔。我當初見你年紀大仲做得咁辛苦，一心想幫輕下你，點知做錯咗決定。」</p>
+          <p><strong>3. 同理對方的震驚與失去安全感：</strong><br>「我明白你聽到一定好震驚、好肉痛，亦都會覺得我無尊重你、破壞咗我哋嘅信任。」</p>
+          <p><strong>4. 提出具體補救與未來承諾請求：</strong><br>「你可唔可以陪我一齊去差館報警？我應承你，以後無論任何超過一萬蚊嘅開支，我一定會先同你商量、得到你同意先做。」</p>
+        `;
+      }
+
+      conversationHistory = [
+        { role: 'system', content: buildDynamicSystemPrompt() }
+      ];
+
+      appendMessage('ai', openingLine);
       conversationHistory.push({ role: 'assistant', content: openingLine });
 
       if (enableVoiceCall) {
         await startHandsFreeCall();
       }
 
-      await playWifeVoice(openingLine, 'fearful', CURRENT_VOICE_ID);
+      await playPartnerVoice(openingLine, selectedUserRole === 'husband' ? 'fearful' : 'calm');
     }
 
     function appendMessage(sender, text) {
       const container = document.getElementById('chat-messages');
+      const isUser = sender === 'user';
       const wrapper = document.createElement('div');
       wrapper.className = `flex flex-col max-w-[85%] sm:max-w-[78%] animate-fade-in ${
-        sender === 'husband' ? 'ml-auto items-end' : 'mr-auto items-start'
+        isUser ? 'ml-auto items-end' : 'mr-auto items-start'
       }`;
+
+      const userRoleTitle = selectedUserRole === 'husband' ? '你（丈夫）' : '你（妻子）';
+      const aiRoleTitle = selectedUserRole === 'husband' ? '妻子' : '丈夫';
 
       const label = document.createElement('span');
       label.className = 'text-[11px] text-stone-400 mb-1 px-1';
-      label.textContent = sender === 'husband' ? '你（丈夫）' : '妻子';
+      label.textContent = isUser ? userRoleTitle : aiRoleTitle;
 
       const bubble = document.createElement('div');
-      bubble.className = sender === 'husband'
+      bubble.className = isUser
         ? 'bg-amber-700 text-white px-4 py-3 rounded-2xl rounded-tr-sm text-sm leading-relaxed shadow-sm'
         : 'bg-white border border-stone-200 text-stone-800 px-4 py-3 rounded-2xl rounded-tl-sm text-sm leading-relaxed shadow-sm';
 
@@ -969,33 +1060,43 @@
     async function sendUserMessageText(userText) {
       if (isWaitingForAI || !userText) return;
 
-      appendMessage('husband', userText);
+      appendMessage('user', userText);
       conversationHistory.push({ role: 'user', content: userText });
+
+      // 每一輪動態刷新 system prompt，確保幕後最新的 hiddenNvcScore 即時主導對方反應
+      conversationHistory[0] = { role: 'system', content: buildDynamicSystemPrompt() };
 
       setLoadingState(true);
 
       try {
         const aiResult = await callDeepSeekBackend(conversationHistory, false);
-        const wifeReply = aiResult.reply || "（低頭唔敢出聲）……";
-        const wifeEmotion = aiResult.emotion || "sad";
-        currentTrustScore = typeof aiResult.trust_score === 'number' ? aiResult.trust_score : currentTrustScore;
-        
-        updateTrustUI(currentTrustScore);
-        appendMessage('wife', wifeReply);
-        conversationHistory.push({ role: 'assistant', content: wifeReply });
+        const partnerReply = aiResult.reply || "（沉默低頭唔出聲）……";
+        const partnerEmotion = aiResult.emotion || "sad";
+
+        if (typeof aiResult.nvc_score === 'number') {
+          hiddenNvcScore = Math.max(0, Math.min(100, Math.round(aiResult.nvc_score)));
+        }
+
+        appendMessage('ai', partnerReply);
+        conversationHistory.push({ role: 'assistant', content: partnerReply });
 
         setLoadingState(false);
 
-        await playWifeVoice(wifeReply, wifeEmotion, CURRENT_VOICE_ID);
+        await playPartnerVoice(partnerReply, partnerEmotion);
 
-        turnCount++;
-        document.getElementById('turn-counter').textContent = `第 ${turnCount} 輪對話`;
+        const reachedMaxTurns = turnCount >= MAX_TURNS;
 
-        if (aiResult.should_end || turnCount > 12) {
+        if (aiResult.should_end || reachedMaxTurns) {
           stopHandsFreeCall();
+          const finalReason = reachedMaxTurns
+            ? `已達 ${MAX_TURNS} 輪對話上限，系統自動完成對話並進行評估`
+            : (aiResult.end_reason || "對話已告一段落");
           setTimeout(() => {
-            generateNVCReport(aiResult.end_reason || "對話已告一段落");
+            generateNVCReport(finalReason);
           }, 1200);
+        } else {
+          turnCount++;
+          document.getElementById('turn-counter').textContent = `第 ${turnCount} / ${MAX_TURNS} 輪`;
         }
       } catch (err) {
         setLoadingState(false);
@@ -1011,14 +1112,16 @@
       const indicator = document.getElementById('typing-indicator');
       const sendBtn = document.getElementById('send-btn');
       const input = document.getElementById('user-input');
+      const partnerName = selectedUserRole === 'husband' ? '老婆' : '老公';
 
       if (loading) {
         indicator.classList.remove('hidden');
+        document.getElementById('typing-text').textContent = `${partnerName}正在感受你嘅語氣並思考回應……`;
         sendBtn.disabled = true;
         input.disabled = true;
         if (isHandsFreeActive) {
           updateVoiceUIState('transcribing');
-          document.getElementById('voice-status-title').textContent = '⏳ 老婆思考緊點覆你…';
+          document.getElementById('voice-status-title').textContent = `⏳ ${partnerName}思考緊點覆你…`;
           document.getElementById('voice-status-sub').textContent = 'DeepSeek 對話引擎生成回應中';
         }
       } else {
@@ -1031,22 +1134,9 @@
       }
     }
 
-    function updateTrustUI(score) {
-      const clamped = Math.max(0, Math.min(100, score));
-      const bar = document.getElementById('trust-bar');
-      bar.style.width = `${clamped}%`;
-      if (clamped < 30) {
-        bar.className = 'h-full bg-rose-500 transition-all duration-500';
-      } else if (clamped < 65) {
-        bar.className = 'h-full bg-amber-500 transition-all duration-500';
-      } else {
-        bar.className = 'h-full bg-emerald-500 transition-all duration-500';
-      }
-    }
-
     function forceEndConversation() {
       if (conversationHistory.length <= 2) {
-        alert("請先與妻子進行至少一兩句對話，再結束並查看分析報告。");
+        alert("請先進行至少一兩句對話，再結束並查看分析報告。");
         return;
       }
       stopHandsFreeCall();
@@ -1059,16 +1149,19 @@
       document.getElementById('chat-screen').classList.add('hidden');
       document.getElementById('analyzing-screen').classList.remove('hidden');
 
+      const userLabel = selectedUserRole === 'husband' ? '丈夫（玩家）' : '妻子（玩家）';
+      const aiLabel = selectedUserRole === 'husband' ? '妻子（AI）' : '丈夫（AI）';
+
       const transcript = conversationHistory
         .filter(m => m.role !== 'system')
-        .map(m => `${m.role === 'user' ? '丈夫（玩家）' : '妻子'}：${m.content}`)
+        .map(m => `${m.role === 'user' ? userLabel : aiLabel}：${m.content}`)
         .join('\n');
 
       const analysisMessages = [
-        { role: 'system', content: ANALYZER_SYSTEM_PROMPT },
+        { role: 'system', content: buildAnalyzerSystemPrompt() },
         {
           role: 'user',
-          content: `對話結束原因：${endReason}\n\n【完整對話紀錄】\n${transcript}\n\n請根據以上對話紀錄，嚴格按照非暴力溝通標準分析丈夫（玩家）講得好及講得不好的內容，並輸出合法 JSON 報告（確保陣列元素之間都有逗號分隔，且字串內部絕不使用英文雙引號）。`
+          content: `對話結束原因：${endReason}\n對話總輪數：${turnCount} / ${MAX_TURNS} 輪\n幕後實時互動指數：${hiddenNvcScore} / 100 分\n\n【完整對話紀錄】\n${transcript}\n\n請根據以上對話紀錄，嚴格按照非暴力溝通標準分析${userLabel}講得好及講得不好的內容，並輸出合法 JSON 報告（確保陣列元素之間都有逗號分隔，且字串內部絕不使用英文雙引號）。`
         }
       ];
 
@@ -1092,7 +1185,12 @@
       document.getElementById('analyzing-screen').classList.add('hidden');
       document.getElementById('report-screen').classList.remove('hidden');
 
-      document.getElementById('overall-score').textContent = report.overall_score ?? '--';
+      const roleTagText = selectedUserRole === 'husband'
+        ? '非暴力溝通 (NVC) 評估報告 · 扮演角色：丈夫'
+        : '非暴力溝通 (NVC) 評估報告 · 扮演角色：妻子';
+      document.getElementById('report-role-tag').textContent = roleTagText;
+
+      document.getElementById('overall-score').textContent = report.overall_score ?? hiddenNvcScore;
       document.getElementById('report-outcome-badge').textContent = `對話結果：${report.outcome_label || ''}`;
       document.getElementById('report-summary').textContent = report.summary || '';
 
