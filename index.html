@@ -320,12 +320,20 @@
     let conversationHistory = [];
     let turnCount = 1;
     const MAX_TURNS = 12;               // 嚴格限制 12 輪內完成對話
-    let hiddenNvcScore = 30;            // 系統幕後隱藏的實時 NVC 分數 (0-100)
-    let isWaitingForAI = false;
+    // --- 角色聲線配置（已整合你的 5 組專屬復刻情緒音軌） ---
+    const WIFE_VOICE_MAP = {
+      calm: 'moss_audio_18837cbe-ea94-11f1-9c05-5e85d72bfa83',    // 平靜、釋懷女聲
+      sad: 'moss_audio_4a030779-ea95-11f1-b685-fa73a44f4e6e',     // 傷心、內疚、哭泣女聲
+      fearful: 'moss_audio_4a030779-ea95-11f1-b685-fa73a44f4e6e', // 害怕、顫抖（沿用傷心女聲）
+      angry: 'moss_audio_4a030779-ea95-11f1-b685-fa73a44f4e6e'    // 委屈激動防衛（沿用傷心女聲＋後端提高語速與音量）
+    };
 
-    // --- 角色聲線配置 ---
-    const WIFE_CLONED_VOICE_ID = 'moss_audio_7b1027a9-e9bd-11f1-9c05-5e85d72bfa83'; // 復刻老婦人粵語聲線
-    const HUSBAND_VOICE_ID = 'Cantonese_Gentleman'; // AI 丈夫使用的沉穩粵語男聲
+    const HUSBAND_VOICE_MAP = {
+      calm: 'moss_audio_5c9ed502-ea8b-11f1-a529-aac3beb84f85',    // 平靜、溫和男聲
+      sad: 'moss_audio_1aa638b4-ea8a-11f1-8ca5-42b102456dbc',     // 傷心、心痛、失望男聲
+      fearful: 'moss_audio_1aa638b4-ea8a-11f1-8ca5-42b102456dbc', // 震驚、徬徨（沿用傷心男聲）
+      angry: 'moss_audio_284c4f66-ea89-11f1-8ca5-42b102456dbc'    // 憤怒、激動質問男聲
+    };
 
     // --- 語音通話與音訊狀態 ---
     let autoTTSEnabled = true;
@@ -632,8 +640,8 @@
 
       const aiRole = selectedUserRole === 'husband' ? 'wife' : 'husband';
       const activeVoiceId = aiRole === 'wife'
-        ? WIFE_CLONED_VOICE_ID
-        : HUSBAND_VOICE_ID;
+        ? (WIFE_VOICE_MAP[emotion] || WIFE_VOICE_MAP.sad)
+        : (HUSBAND_VOICE_MAP[emotion] || HUSBAND_VOICE_MAP.calm);
 
       try {
         const response = await fetch('/api/tts', {
