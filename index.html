@@ -1030,8 +1030,16 @@
       ];
 
       appendMessage('ai', openingLine);
-      conversationHistory.push({ role: 'assistant', content: openingLine });
-
+conversationHistory.push({
+        role: 'assistant',
+        content: JSON.stringify({
+          reply: openingLine,
+          emotion: selectedUserRole === 'husband' ? 'fearful' : 'calm',
+          nvc_score: hiddenNvcScore,
+          should_end: false,
+          end_reason: ''
+        })
+      });
       if (enableVoiceCall) {
         await startHandsFreeCall();
       }
