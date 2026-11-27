@@ -1,19 +1,21 @@
+// api/chat.js - DeepSeek API 代理（開啟原生 JSON 模式以杜絕分析報告解析錯誤）
 export default async function handler(req, res) {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'Vercel 尚未設定 DEEPSEEK_API_KEY' });
+    return res.status(500).json({ error: 'Vercel 尚未設定 DEEPSEEK_API_KEY 環境變數' });
   }
 
   try {
     const { messages, temperature = 0.7 } = req.body || {};
 
-    // 注意：刻意不傳入 response_format，避免 deepseek-flash 輸出全空白字元的已知問題
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: '缺少有效的 messages 對話內容' });
+    }
+
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -24,7 +26,8 @@ export default async function handler(req, res) {
         model: 'deepseek-chat',
         messages: messages,
         temperature: temperature,
-        max_tokens: 800
+        max_tokens: 2048,
+        response_format: { type: 'json_object' }
       })
     });
 
@@ -38,6 +41,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(500).json({ error: `後端連線異常: ${error.message}` });
+    console.error('DeepSeek API Error:', error);
+    return res.status(500).json({ error: `伺服器連線失敗: ${error.message}` });
   }
 }
