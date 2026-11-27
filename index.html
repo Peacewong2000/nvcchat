@@ -593,7 +593,7 @@
       }
     }
 
-    // --- MiniMax TTS：根據目前 AI 角色自動選用女聲或男聲 ---
+   // --- MiniMax TTS：根據目前 AI 角色自動選用女聲或男聲 ---
     async function playPartnerVoice(text, emotion = 'fearful') {
       if (!autoTTSEnabled && !isHandsFreeActive) return;
 
@@ -605,7 +605,8 @@
       isPartnerSpeaking = true;
       updateVoiceUIState('speaking');
 
-      const activeVoiceId = selectedUserRole === 'husband'
+      const aiRole = selectedUserRole === 'husband' ? 'wife' : 'husband';
+      const activeVoiceId = aiRole === 'wife'
         ? WIFE_CLONED_VOICE_ID
         : HUSBAND_VOICE_ID;
 
@@ -613,7 +614,7 @@
         const response = await fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, emotion, voiceId: activeVoiceId })
+          body: JSON.stringify({ text, emotion, voiceId: activeVoiceId, role: aiRole })
         });
 
         if (!response.ok || response.status === 204) {
